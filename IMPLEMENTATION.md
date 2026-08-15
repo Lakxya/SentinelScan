@@ -118,12 +118,13 @@ High entropy is **never** used alone to generate `CRITICAL` findings. Instead, i
 
 ## 🛠️ 4. CLI Commands & Execution Flow
 
-SentinelScan provides four scan entrypoints:
+SentinelScan provides five scan entrypoints:
 
-1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`, `IacScanner`).
+1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`, `IacScanner`, `ScaScanner`).
 2. **`sentinelscan secrets <path>`**: Runs target discovery and executes dedicated `SecretScanner` analysis.
 3. **`sentinelscan sast <path>`**: Runs target discovery and executes dedicated `SastScanner` AST analysis.
 4. **`sentinelscan iac <path>`**: Runs target discovery and executes dedicated `IacScanner` analysis.
+5. **`sentinelscan sca <path> [--offline]`**: Runs target discovery and executes dedicated `ScaScanner` dependency vulnerability analysis.
 
 ---
 
@@ -134,11 +135,13 @@ The test suite covers positive detections, false positive exclusions, filesystem
 - `test_secret_scanner.py`: Validates secret detectors, Shannon entropy math, token masking, and secret leak prevention assertions.
 - `test_sast_scanner.py`: Validates Python AST positive detections (`eval`, `exec`, `shell=True`, `os.system`, `pickle`, `MD5`, `SHA-1`), zero false positives for benign subprocess, strict UTF-8 decoding error handling, and zero code execution.
 - `test_iac_scanner.py`: Validates Terraform HCL2 parsing (`python-hcl2`), CloudFormation YAML (`PyYAML` `SafeLoader` with CloudFormation intrinsic tag constructors), open security groups, public S3 buckets, unencrypted databases, wildcard IAM policies, non-CloudFormation YAML exclusions, and syntax error handling.
+- `test_sca_scanner.py`: Validates Python requirement/toml/lockfile parsers, JavaScript package.json and package-lock.json (v1/v2/v3) parsers, npm SemVer caret/tilde matching, PyPA PEP 440 version matching, OSV two-stage API lookup, local disk cache, `--offline` zero-network guarantee, and network-unavailable status handling.
 
 ---
 
 ## 🎯 6. Next Steps
 
-- **Milestone 5 (Docker Security Analysis)**: Dockerfile instruction security and unpinned base image scanner.
+- **Milestone 6 (Docker Security Analysis)**: Dockerfile instruction security and unpinned base image scanner.
+
 
 

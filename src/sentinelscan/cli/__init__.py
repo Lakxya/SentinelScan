@@ -3,6 +3,7 @@
 from sentinelscan.cli.commands import (
     handle_iac,
     handle_sast,
+    handle_sca,
     handle_scan,
     handle_secrets,
     handle_version,
@@ -13,6 +14,7 @@ __all__ = [
     "create_parser",
     "handle_iac",
     "handle_sast",
+    "handle_sca",
     "handle_scan",
     "handle_secrets",
     "handle_version",

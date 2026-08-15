@@ -3,6 +3,7 @@
 from sentinelscan.cli.commands import (
     handle_iac,
     handle_sast,
+    handle_sca,
     handle_scan,
     handle_secrets,
     handle_version,
@@ -80,3 +81,16 @@ def test_cli_iac_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "iac-scanner" in captured.out
+
+
+def test_cli_sca_command(capsys):
+    """Verify dedicated sca command executes SCA scanner workflow with --offline flag."""
+    parser = create_parser()
+    args = parser.parse_args(["sca", ".", "--offline"])
+    assert args.command == "sca"
+    assert args.offline is True
+
+    exit_code = handle_sca(".", json_output=False, verbose=False, offline=True)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "sca-scanner" in captured.out

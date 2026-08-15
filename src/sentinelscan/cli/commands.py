@@ -11,6 +11,7 @@ from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
+from sentinelscan.scanners.sca_scanner import ScaScanner
 from sentinelscan.scanners.secret_scanner import SecretScanner
 from sentinelscan.utils.logging import setup_logging
 
@@ -109,4 +110,21 @@ def handle_iac(
         json_output=json_output,
         verbose=verbose,
         registry=iac_registry,
+    )
+
+
+def handle_sca(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+    offline: bool = False,
+) -> int:
+    """Execute dedicated SCA security scanning workflow against target path."""
+    sca_registry = ScannerRegistry(register_defaults=False)
+    sca_registry.register(ScaScanner(offline=offline))
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=sca_registry,
     )

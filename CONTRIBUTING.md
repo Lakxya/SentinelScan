@@ -90,6 +90,20 @@ When adding a new IaC security rule to `src/sentinelscan/scanners/iac_scanner.py
 
 ---
 
+## 🏗️ 6. Adding New SCA Parsers & Ecosystem Support
+
+When extending `src/sentinelscan/scanners/sca_scanner.py` with new package ecosystem parsers:
+
+1. **Zero Command Execution**: Never call package manager CLI binaries (`pip`, `npm`, `cargo`, `go`, `composer`). Parse lockfiles and manifest text using safe parsers (`json`, `tomllib`, `re`).
+2. **Metadata Privacy**: Outbound vulnerability API queries must contain ONLY package names and version strings.
+3. **Use OSV Two-Stage Lookup**: Query Stage 1 batch endpoint (`/v1/querybatch`) and Stage 2 advisory detail endpoint (`/v1/vulns/{id}`).
+4. **Cache Index & Details**: Store query indexes and advisory objects in `OsvCacheManager` (`~/.sentinelscan/cache/osv/`).
+5. **Support `--offline` Mode**: Respect `self.offline` flag and avoid socket calls when offline mode is enabled.
+6. **Add Unit Tests**: Write unit tests in `tests/unit/test_sca_scanner.py`.
+
+---
+
+
 
 
 ## 🔒 4. Security Principles & Guidelines

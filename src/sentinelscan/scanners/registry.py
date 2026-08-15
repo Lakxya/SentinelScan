@@ -13,14 +13,16 @@ class ScannerRegistry:
             self._register_defaults()
 
     def _register_defaults(self) -> None:
-        """Register built-in default scanner modules."""
+        """Instantiate and register standard SentinelScan security scanners."""
         from sentinelscan.scanners.iac_scanner import IacScanner
         from sentinelscan.scanners.sast_scanner import SastScanner
+        from sentinelscan.scanners.sca_scanner import ScaScanner
         from sentinelscan.scanners.secret_scanner import SecretScanner
 
         self.register(SecretScanner())
         self.register(SastScanner())
         self.register(IacScanner())
+        self.register(ScaScanner())
 
     def register(self, scanner: BaseScanner) -> None:
         """Register a scanner instance.

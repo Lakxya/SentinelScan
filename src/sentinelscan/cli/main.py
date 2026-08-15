@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from sentinelscan.cli.commands import (
     handle_iac,
     handle_sast,
+    handle_sca,
     handle_scan,
     handle_secrets,
     handle_version,
@@ -118,6 +119,33 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'sca' command
+    sca_parser = subparsers.add_parser(
+        "sca",
+        help="Run focused Software Composition Analysis (SCA) against Python and JavaScript dependencies.",
+    )
+    sca_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for vulnerable dependencies (e.g. '.').",
+    )
+    sca_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    sca_parser.add_argument(
+        "--offline",
+        action="store_true",
+        help="Strictly disable network calls and rely entirely on local vulnerability cache.",
+    )
+    sca_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -162,6 +190,16 @@ def main(args: Sequence[str] | None = None) -> None:
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "sca":
+        sys.exit(
+            handle_sca(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+                offline=parsed.offline,
             )
         )
 
