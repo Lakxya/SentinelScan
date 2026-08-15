@@ -24,7 +24,10 @@ classifiers = [
     "Programming Language :: Python :: 3.14",
     "Topic :: Security",
 ]
-dependencies = []
+dependencies = [
+    "PyYAML>=6.0",
+    "python-hcl2>=4.3.0",
+]
 
 [project.optional-dependencies]
 dev = [

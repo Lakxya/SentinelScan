@@ -8,6 +8,7 @@ from sentinelscan.core.engine import ScanEngine
 from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
+from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
 from sentinelscan.scanners.secret_scanner import SecretScanner
@@ -68,16 +69,7 @@ def handle_secrets(
     json_output: bool = False,
     verbose: bool = False,
 ) -> int:
-    """Execute dedicated secret scanning workflow against target path.
-
-    Args:
-        target_path_str: Target directory or file path string.
-        json_output: Render output as JSON if True, else console text.
-        verbose: Enable verbose logging if True.
-
-    Returns:
-        int: Status exit code.
-    """
+    """Execute dedicated secret scanning workflow against target path."""
     secrets_registry = ScannerRegistry(register_defaults=False)
     secrets_registry.register(SecretScanner())
     return handle_scan(
@@ -93,16 +85,7 @@ def handle_sast(
     json_output: bool = False,
     verbose: bool = False,
 ) -> int:
-    """Execute dedicated SAST security scanning workflow against target path.
-
-    Args:
-        target_path_str: Target directory or file path string.
-        json_output: Render output as JSON if True, else console text.
-        verbose: Enable verbose logging if True.
-
-    Returns:
-        int: Status exit code.
-    """
+    """Execute dedicated SAST security scanning workflow against target path."""
     sast_registry = ScannerRegistry(register_defaults=False)
     sast_registry.register(SastScanner())
     return handle_scan(
@@ -110,4 +93,20 @@ def handle_sast(
         json_output=json_output,
         verbose=verbose,
         registry=sast_registry,
+    )
+
+
+def handle_iac(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated IaC security scanning workflow against target path."""
+    iac_registry = ScannerRegistry(register_defaults=False)
+    iac_registry.register(IacScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=iac_registry,
     )

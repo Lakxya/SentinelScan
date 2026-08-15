@@ -4,7 +4,13 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from sentinelscan.cli.commands import handle_sast, handle_scan, handle_secrets, handle_version
+from sentinelscan.cli.commands import (
+    handle_iac,
+    handle_sast,
+    handle_scan,
+    handle_secrets,
+    handle_version,
+)
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -90,6 +96,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'iac' command
+    iac_parser = subparsers.add_parser(
+        "iac",
+        help="Run focused Infrastructure-as-Code (IaC) security scanning against a target directory or file.",
+    )
+    iac_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for IaC misconfigurations (e.g. '.').",
+    )
+    iac_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    iac_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -122,6 +150,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "sast":
         sys.exit(
             handle_sast(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "iac":
+        sys.exit(
+            handle_iac(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

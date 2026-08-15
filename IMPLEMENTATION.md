@@ -118,11 +118,12 @@ High entropy is **never** used alone to generate `CRITICAL` findings. Instead, i
 
 ## 🛠️ 4. CLI Commands & Execution Flow
 
-SentinelScan provides three scan entrypoints:
+SentinelScan provides four scan entrypoints:
 
-1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`).
+1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`, `IacScanner`).
 2. **`sentinelscan secrets <path>`**: Runs target discovery and executes dedicated `SecretScanner` analysis.
 3. **`sentinelscan sast <path>`**: Runs target discovery and executes dedicated `SastScanner` AST analysis.
+4. **`sentinelscan iac <path>`**: Runs target discovery and executes dedicated `IacScanner` analysis.
 
 ---
 
@@ -131,16 +132,13 @@ SentinelScan provides three scan entrypoints:
 The test suite covers positive detections, false positive exclusions, filesystem edge cases, detector isolation, and automated secret leak prevention:
 
 - `test_secret_scanner.py`: Validates secret detectors, Shannon entropy math, token masking, and secret leak prevention assertions.
-- `test_sast_scanner.py`:
-  - `test_sast_positive_detections`: Validates positive detection for `eval()`, `exec()`, `shell=True`, `os.system()`, `pickle`, `MD5`, `SHA-1`.
-  - `test_sast_negative_ordinary_subprocess`: Verifies ordinary `subprocess.run(["ls", "-la"])` without `shell=True` produces 0 findings.
-  - `test_sast_strict_utf8_decoding_error_handling`: Verifies strict UTF-8 decoding failure logs a warning and skips the file without crashing.
-  - `test_sast_zero_code_execution_guarantee`: Verifies target Python code containing exceptions/destruct commands is NEVER executed during scanning.
-  - `test_sast_syntax_error_handling`: Verifies malformed syntax is skipped safely.
+- `test_sast_scanner.py`: Validates Python AST positive detections (`eval`, `exec`, `shell=True`, `os.system`, `pickle`, `MD5`, `SHA-1`), zero false positives for benign subprocess, strict UTF-8 decoding error handling, and zero code execution.
+- `test_iac_scanner.py`: Validates Terraform HCL2 parsing (`python-hcl2`), CloudFormation YAML (`PyYAML` `SafeLoader` with CloudFormation intrinsic tag constructors), open security groups, public S3 buckets, unencrypted databases, wildcard IAM policies, non-CloudFormation YAML exclusions, and syntax error handling.
 
 ---
 
 ## 🎯 6. Next Steps
 
-- **Milestone 4 (Infrastructure-as-Code Security)**: Security misconfiguration analyzer for Terraform (`.tf`), CloudFormation, and SAM templates.
+- **Milestone 5 (Docker Security Analysis)**: Dockerfile instruction security and unpinned base image scanner.
+
 

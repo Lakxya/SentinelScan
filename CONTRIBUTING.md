@@ -78,6 +78,19 @@ When adding a new Python SAST rule to `src/sentinelscan/scanners/sast_scanner.py
 
 ---
 
+## 🏗️ 5. Adding New IaC Rules
+
+When adding a new IaC security rule to `src/sentinelscan/scanners/iac_scanner.py`:
+
+1. **Target Resource Types**: Implement detection logic in `_analyze_tf_resource` (for Terraform) and `_analyze_cfn_resource` (for CloudFormation/SAM).
+2. **Use Deterministic Rule IDs**: Format rule IDs as `IAC-AWS-<CHECK-NAME>` (e.g. `IAC-AWS-SG-OPEN-INGRESS`, `IAC-AWS-S3-PUBLIC-ACL`).
+3. **Safe Parsing**: Rely on `python-hcl2` for `.tf` files and `CloudFormationSafeLoader` for `.yaml` files. Never attempt unsafe string splitting or regex parsing of complex structures.
+4. **Set Appropriate Confidence**: Set `Confidence.HIGH` for literal values (e.g. `cidr_blocks = ["0.0.0.0/0"]`), and `Confidence.MEDIUM` if values are passed via variables.
+5. **Add Comprehensive Unit Tests**: Write unit tests in `tests/unit/test_iac_scanner.py`.
+
+---
+
+
 
 ## 🔒 4. Security Principles & Guidelines
 
