@@ -9,7 +9,8 @@ This document provides a comprehensive technical overview of **SentinelScan**, i
 SentinelScan is an open-source, local-first security engineering CLI bridging static application security, infrastructure assessment, software supply chain checks, cloud posture analysis, and attack-path risk correlation into a single tool.
 
 ### Core Principles & Safety Guarantees
-1. **Local-First & Read-Only**: All processing occurs locally without network requests or external credential verification calls.
+1. **Local-First Filesystem Assessment**: The `SecretScanner` performs local filesystem analysis and does not make external network requests or transmit discovered data. Future network-enabled scanners must use explicit authorization, least privilege, safe defaults, and documented network boundaries.
+
 2. **Strict Credential Leak Prevention**: Raw secret values are **NEVER** stored in `Finding` objects, descriptions, impacts, remediations, metadata, `Location`, logs, exceptions, console reports, or JSON output. Discovered values are strictly masked.
 3. **Location Snippet Safety**: `Location` records `file_path`, `start_line`, and `end_line` without raw source code snippets to avoid accidental data leakage.
 4. **Detector & Scanner Isolation**: Scanners and detectors execute within exception boundaries. An unexpected failure in one detector logs a warning and permits remaining detectors to run without aborting the scan.

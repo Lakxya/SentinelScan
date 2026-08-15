@@ -19,9 +19,10 @@ This document outlines SentinelScan's security architecture, data handling rules
 - The `Location` model records `file_path`, `start_line`, and `end_line` only.
 - Raw source code snippets are intentionally omitted to prevent accidental data leakage or code exposure in reports.
 
-### 1.3 Local-First & Zero Network Calls
-- The scanner operates 100% locally.
-- It makes **no network requests**, calls no external validation APIs (such as AWS STS or GitHub API), and never sends discovered data to remote servers.
+### 1.3 Local Filesystem Assessment & Network Boundaries
+- **Current SecretScanner behavior**: The `SecretScanner` performs local filesystem analysis and does not make external network requests or transmit discovered data. It calls no external validation APIs (such as AWS STS or GitHub API).
+- **Future network-enabled scanners**: Future network-enabled modules (such as DAST, Cloud Assessment, or Network Assessment) must use explicit authorization, least privilege, safe defaults, and clearly documented network boundaries.
+
 
 ### 1.4 Safe Filesystem Operations
 - **Read-Only Access**: Scanner code never modifies, writes to, or executes scanned target files.

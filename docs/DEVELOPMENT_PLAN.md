@@ -12,7 +12,8 @@
 SentinelScan is an open-source, local-first security engineering CLI. It unifies static application security, secret detection, software composition analysis, container/IaC checks, cloud posture assessment, and attack-path risk correlation into a single developer-centric tool.
 
 ### Engineering Philosophy
-- **Local-First & Privacy Preserving**: Assessment code runs locally. Discovered credentials and source code never leave the local environment.
+- **Local-First & Privacy Preserving**: The SecretScanner and filesystem assessment modules perform local analysis without transmitting discovered data. Future network-enabled scanners must use explicit authorization, least privilege, safe defaults, and documented network boundaries.
+
 - **Fail-Safe & Isolated**: Individual scanner or detector failures must never terminate an entire scan.
 - **Auditable & Deterministic**: Scan outputs are reproducible, machine-readable, and deterministic.
 - **Zero Hallucinated Findings**: Only report verified patterns or deterministic rules; do not produce fake findings.

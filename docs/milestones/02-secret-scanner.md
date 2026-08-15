@@ -70,4 +70,5 @@ Implement a production-oriented secret detection module (`SecretScanner`) integr
 ## 📌 5. Known Limitations at Milestone 02 Completion
 
 - Generic secret detector requires suspicious variable assignment context + entropy $H \ge 3.6$; standalone unassigned high-entropy strings without variable context do not trigger `CRITICAL` findings to minimize false positives.
-- Network API validation (e.g. checking if an AWS key is active via AWS STS) is intentionally NOT performed to preserve local-first privacy.
+- Network API validation (e.g. checking if an AWS key is active via AWS STS) is intentionally NOT performed by `SecretScanner` to preserve local-first privacy. Future network-enabled scanners must use explicit authorization, least privilege, safe defaults, and clearly documented network boundaries.
+
