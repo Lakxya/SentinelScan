@@ -1,6 +1,6 @@
 """SentinelScan Command Line Interface package."""
 
-from sentinelscan.cli.commands import handle_scan, handle_secrets, handle_version
+from sentinelscan.cli.commands import handle_sast, handle_scan, handle_secrets, handle_version
 from sentinelscan.cli.main import create_parser, main
 
-__all__ = ["create_parser", "handle_scan", "handle_secrets", "handle_version", "main"]
+__all__ = ["create_parser", "handle_sast", "handle_scan", "handle_secrets", "handle_version", "main"]

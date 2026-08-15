@@ -4,7 +4,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from sentinelscan.cli.commands import handle_scan, handle_secrets, handle_version
+from sentinelscan.cli.commands import handle_sast, handle_scan, handle_secrets, handle_version
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -68,6 +68,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'sast' command
+    sast_parser = subparsers.add_parser(
+        "sast",
+        help="Run focused Static Application Security Testing (SAST) against a target directory or file.",
+    )
+    sast_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess with SAST (e.g. '.').",
+    )
+    sast_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    sast_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -91,6 +113,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "secrets":
         sys.exit(
             handle_secrets(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "sast":
+        sys.exit(
+            handle_sast(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

@@ -9,6 +9,7 @@ from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.registry import ScannerRegistry
+from sentinelscan.scanners.sast_scanner import SastScanner
 from sentinelscan.scanners.secret_scanner import SecretScanner
 from sentinelscan.utils.logging import setup_logging
 
@@ -84,4 +85,29 @@ def handle_secrets(
         json_output=json_output,
         verbose=verbose,
         registry=secrets_registry,
+    )
+
+
+def handle_sast(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated SAST security scanning workflow against target path.
+
+    Args:
+        target_path_str: Target directory or file path string.
+        json_output: Render output as JSON if True, else console text.
+        verbose: Enable verbose logging if True.
+
+    Returns:
+        int: Status exit code.
+    """
+    sast_registry = ScannerRegistry(register_defaults=False)
+    sast_registry.register(SastScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=sast_registry,
     )

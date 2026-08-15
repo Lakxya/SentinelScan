@@ -1,6 +1,6 @@
 """Unit tests for SentinelScan CLI commands, parser, and argument handling."""
 
-from sentinelscan.cli.commands import handle_scan, handle_secrets, handle_version
+from sentinelscan.cli.commands import handle_sast, handle_scan, handle_secrets, handle_version
 from sentinelscan.cli.main import create_parser
 
 
@@ -50,3 +50,15 @@ def test_cli_secrets_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "secret-scanner" in captured.out
+
+
+def test_cli_sast_command(capsys):
+    """Verify dedicated sast command executes SAST scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["sast", "."])
+    assert args.command == "sast"
+
+    exit_code = handle_sast(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "sast-scanner" in captured.out

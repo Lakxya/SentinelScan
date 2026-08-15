@@ -66,6 +66,19 @@ When adding a new secret detector to `src/sentinelscan/scanners/secret_scanner.p
 
 ---
 
+## 🔍 4. Adding New SAST Rules
+
+When adding a new Python SAST rule to `src/sentinelscan/scanners/sast_scanner.py`:
+
+1. **Extend `PythonSecurityASTVisitor`**: Add inspection logic to AST visitor methods (`visit_Call`, `visit_Import`, `visit_Attribute`, etc.).
+2. **Use Deterministic Rule IDs**: Format rule IDs as `SAST-PY-<CHECK-NAME>` (e.g. `SAST-PY-EVAL`, `SAST-PY-MD5`).
+3. **Avoid Low-Value False Positives**: Do NOT flag benign functions or standard process executions without security concerns. Distinguish safe list arguments from shell execution (`shell=True`).
+4. **Never Execute Target Code**: Parse trees structurally via `ast.parse()`. Never call, evaluate, or import target code.
+5. **Add Comprehensive Unit Tests**: Write unit tests in `tests/unit/test_sast_scanner.py` including positive, negative, syntax error, and zero-execution tests.
+
+---
+
+
 ## 🔒 4. Security Principles & Guidelines
 
 - **Never commit real credentials**: Synthetic test credentials in unit tests must be non-operational example strings.

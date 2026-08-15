@@ -118,10 +118,11 @@ High entropy is **never** used alone to generate `CRITICAL` findings. Instead, i
 
 ## 🛠️ 4. CLI Commands & Execution Flow
 
-SentinelScan provides two primary scan entrypoints:
+SentinelScan provides three scan entrypoints:
 
-1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (including `SecretScanner`).
+1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`).
 2. **`sentinelscan secrets <path>`**: Runs target discovery and executes dedicated `SecretScanner` analysis.
+3. **`sentinelscan sast <path>`**: Runs target discovery and executes dedicated `SastScanner` AST analysis.
 
 ---
 
@@ -129,19 +130,17 @@ SentinelScan provides two primary scan entrypoints:
 
 The test suite covers positive detections, false positive exclusions, filesystem edge cases, detector isolation, and automated secret leak prevention:
 
-- `test_secret_scanner.py`:
-  - `test_entropy_calculation`: Validates Shannon entropy values.
-  - `test_mask_token_helper`: Verifies token masking outputs.
-  - `test_aws_access_key_detection_and_leak_prevention`: Asserts raw secret values never appear in finding repr, description, impact, remediation, metadata, console output, or JSON.
-  - `test_aws_secret_key_requires_context`: Verifies context requirements for AWS secret keys.
-  - `test_private_key_safety`: Ensures PEM keys output fixed `[PRIVATE KEY REDACTED]`.
-  - `test_database_url_credential_masking`: Verifies password stripping in database URLs.
-  - `test_generic_secret_detection_and_placeholder_negative`: Verifies generic secret matching and placeholder filtering.
-  - `test_filesystem_safety_binary_and_large_files`: Validates skipping of binary, large, and unreadable files.
-  - `test_detector_isolation`: Proves failure in one detector function does not abort other detectors.
+- `test_secret_scanner.py`: Validates secret detectors, Shannon entropy math, token masking, and secret leak prevention assertions.
+- `test_sast_scanner.py`:
+  - `test_sast_positive_detections`: Validates positive detection for `eval()`, `exec()`, `shell=True`, `os.system()`, `pickle`, `MD5`, `SHA-1`.
+  - `test_sast_negative_ordinary_subprocess`: Verifies ordinary `subprocess.run(["ls", "-la"])` without `shell=True` produces 0 findings.
+  - `test_sast_strict_utf8_decoding_error_handling`: Verifies strict UTF-8 decoding failure logs a warning and skips the file without crashing.
+  - `test_sast_zero_code_execution_guarantee`: Verifies target Python code containing exceptions/destruct commands is NEVER executed during scanning.
+  - `test_sast_syntax_error_handling`: Verifies malformed syntax is skipped safely.
 
 ---
 
 ## 🎯 6. Next Steps
 
-- **Milestone 2 (SAST / Static Code Analysis)**: Python AST static analyzer flagging dangerous functions (`eval()`, `exec()`, `shell=True`).
+- **Milestone 4 (Infrastructure-as-Code Security)**: Security misconfiguration analyzer for Terraform (`.tf`), CloudFormation, and SAM templates.
+
