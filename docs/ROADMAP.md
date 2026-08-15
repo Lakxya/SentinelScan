@@ -13,7 +13,9 @@ This document outlines the official development roadmap for SentinelScan. Each c
 | **Static Code Analysis (SAST)** | `IMPLEMENTED` | v0.3.0 | Python AST analyzer for dangerous dynamic code execution (`eval`, `exec`), command injection (`shell=True`, `os.system`), weak crypto (`md5`, `sha1`), and unsafe deserialization (`pickle`). |
 | **Infrastructure-as-Code (IaC)** | `IMPLEMENTED` | v0.4.0 | Misconfiguration analysis for Terraform (`.tf`), CloudFormation, and SAM templates using `python-hcl2` and `PyYAML` `SafeLoader`. |
 | **Software Composition Analysis (SCA)** | `IMPLEMENTED` | v0.5.0 | Vulnerability scanner for Python (`requirements.txt`, `pyproject.toml`, `poetry.lock`) and JavaScript (`package.json`, `package-lock.json`) using OSV two-stage API, npm SemVer, and local cache. |
-| **Docker Security Analysis** | `PLANNED` | v0.6.0 | Dockerfile security analysis (root user, unpinned base image, hardcoded secrets, unsafe instructions). |
+| **Docker Security Analysis** | `IMPLEMENTED` | v0.6.0 | Static Dockerfile misconfiguration analysis (root user, base image pinning, embedded secrets, dangerous ADD, sensitive ports, missing HEALTHCHECK). |
+| **Kubernetes Security Analysis** | `PLANNED` | v0.7.0 | Kubernetes manifest security checks (privileged containers, missing resource limits, RBAC permissions). |
+
 
 
 
@@ -38,6 +40,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 - **v0.3.0 (Milestone 03 - SAST Scanner)**: Built Python SAST AST scanner module, 8 deterministic security rules, strict UTF-8 decoding, zero-execution guarantees, and `sentinelscan sast` subcommand.
 - **v0.4.0 (Milestone 04 - IaC Scanner)**: Built IaC security scanner module, 8 deterministic rules, `python-hcl2` parsing, `PyYAML` CloudFormation `SafeLoader` tag handling, and `sentinelscan iac` subcommand.
 - **v0.5.0 (Milestone 05 - SCA Scanner)**: Built SCA security scanner module, Python & JS dependency parsers, two-stage OSV vulnerability intelligence, npm SemVer matching, local disk cache, and `sentinelscan sca` subcommand with `--offline` support.
+- **v0.6.0 (Milestone 06 - Docker Scanner)**: Built static Docker security scanner module, deterministic Dockerfile parser, multi-stage build intelligence, 8 security rules, zero CLI/daemon execution guarantees, and `sentinelscan docker` subcommand.
+
 
 
 

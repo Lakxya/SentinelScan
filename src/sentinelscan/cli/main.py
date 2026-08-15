@@ -5,6 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from sentinelscan.cli.commands import (
+    handle_docker,
     handle_iac,
     handle_sast,
     handle_sca,
@@ -146,6 +147,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'docker' command
+    docker_parser = subparsers.add_parser(
+        "docker",
+        help="Run focused Docker security scanning against Dockerfiles.",
+    )
+    docker_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for Dockerfile security misconfigurations (e.g. '.').",
+    )
+    docker_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    docker_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -200,6 +223,15 @@ def main(args: Sequence[str] | None = None) -> None:
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
                 offline=parsed.offline,
+            )
+        )
+
+    if parsed.command == "docker":
+        sys.exit(
+            handle_docker(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
             )
         )
 

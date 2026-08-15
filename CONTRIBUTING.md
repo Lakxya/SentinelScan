@@ -103,10 +103,18 @@ When extending `src/sentinelscan/scanners/sca_scanner.py` with new package ecosy
 
 ---
 
+## 🏗️ 7. Adding New Docker Security Rules
 
+When extending `src/sentinelscan/scanners/docker_scanner.py` with new Dockerfile rules:
 
+1. **Zero Container Execution**: Never call `docker build`, `docker run`, `docker pull`, or Docker daemon APIs. Treat Dockerfiles purely as static text.
+2. **Multi-Stage Build Awareness**: Runtime rules (`USER`, `HEALTHCHECK`) must evaluate ONLY the final stage (`max_stage_index`), ignoring intermediate builder stages.
+3. **Digest Pinning**: Recognize immutable SHA256 image digests (`@sha256:`) as fully pinned base images.
+4. **Mask Secret Values**: Never include raw secret values in findings constructed from `ENV` or `ARG` instructions. Use `mask_token()`.
+5. **Add Unit Tests**: Write unit tests in `tests/unit/test_docker_scanner.py`.
 
-## 🔒 4. Security Principles & Guidelines
+---
+
 
 - **Never commit real credentials**: Synthetic test credentials in unit tests must be non-operational example strings.
 - **Detector Isolation**: Wrap individual detector execution so an exception in one detector does not abort other detectors or crash the scanner.

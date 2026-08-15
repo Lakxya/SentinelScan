@@ -1,6 +1,7 @@
 """Unit tests for SentinelScan CLI commands, parser, and argument handling."""
 
 from sentinelscan.cli.commands import (
+    handle_docker,
     handle_iac,
     handle_sast,
     handle_sca,
@@ -94,3 +95,15 @@ def test_cli_sca_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "sca-scanner" in captured.out
+
+
+def test_cli_docker_command(capsys):
+    """Verify dedicated docker command executes Docker scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["docker", "."])
+    assert args.command == "docker"
+
+    exit_code = handle_docker(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "docker-scanner" in captured.out

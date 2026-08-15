@@ -8,6 +8,7 @@ from sentinelscan.core.engine import ScanEngine
 from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
+from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
@@ -127,4 +128,20 @@ def handle_sca(
         json_output=json_output,
         verbose=verbose,
         registry=sca_registry,
+    )
+
+
+def handle_docker(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated Docker security scanning workflow against target path."""
+    docker_registry = ScannerRegistry(register_defaults=False)
+    docker_registry.register(DockerScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=docker_registry,
     )
