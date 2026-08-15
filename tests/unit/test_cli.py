@@ -1,7 +1,6 @@
 """Unit tests for SentinelScan CLI commands, parser, and argument handling."""
 
-
-from sentinelscan.cli.commands import handle_scan, handle_version
+from sentinelscan.cli.commands import handle_scan, handle_secrets, handle_version
 from sentinelscan.cli.main import create_parser
 
 
@@ -39,3 +38,15 @@ def test_cli_scan_json_output_flag(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert '"summary":' in captured.out
+
+
+def test_cli_secrets_command(capsys):
+    """Verify dedicated secrets command executes secret scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["secrets", "."])
+    assert args.command == "secrets"
+
+    exit_code = handle_secrets(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "secret-scanner" in captured.out

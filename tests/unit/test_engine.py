@@ -79,9 +79,10 @@ class UnavailableScanner(BaseScanner):
 
 def test_scanner_failure_isolation():
     """Verify an exception in one scanner does not crash the overall scan execution."""
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     registry.register(FaultyScanner())
     registry.register(WorkingScanner())
+
 
     engine = ScanEngine(registry=registry)
     target = Target(
@@ -111,8 +112,9 @@ def test_scanner_failure_isolation():
 
 def test_scanner_unavailable_status():
     """Verify scanners returning False for is_available are marked UNAVAILABLE."""
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     registry.register(UnavailableScanner())
+
 
     engine = ScanEngine(registry=registry)
     target = Target(

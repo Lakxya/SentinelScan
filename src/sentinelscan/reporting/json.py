@@ -6,6 +6,10 @@ from typing import Any
 from sentinelscan.models.result import ScanResult
 from sentinelscan.reporting.base import BaseReporter
 
+# Descriptive metadata fields that should not be redacted by dictionary key matching
+ALLOWED_METADATA_KEYS = {"secret_type", "detector", "masked_value"}
+
+# Key substrings triggering automatic redaction in arbitrary metadata dictionaries
 SENSITIVE_KEY_SUBSTRINGS = {"secret", "password", "token", "api_key", "apikey", "private_key", "credential"}
 
 
@@ -15,7 +19,7 @@ def sanitize_sensitive_data(obj: Any) -> Any:
         sanitized = {}
         for key, value in obj.items():
             key_lower = str(key).lower()
-            if any(s in key_lower for s in SENSITIVE_KEY_SUBSTRINGS):
+            if key_lower not in ALLOWED_METADATA_KEYS and any(s in key_lower for s in SENSITIVE_KEY_SUBSTRINGS):
                 sanitized[key] = "[REDACTED]"
             else:
                 sanitized[key] = sanitize_sensitive_data(value)

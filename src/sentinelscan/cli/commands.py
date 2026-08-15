@@ -9,6 +9,7 @@ from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.registry import ScannerRegistry
+from sentinelscan.scanners.secret_scanner import SecretScanner
 from sentinelscan.utils.logging import setup_logging
 
 
@@ -24,7 +25,7 @@ def handle_scan(
     verbose: bool = False,
     registry: ScannerRegistry | None = None,
 ) -> int:
-    """Execute scan workflow against target path.
+    """Execute full scan workflow against target path.
 
     Args:
         target_path_str: Target directory or file path string.
@@ -58,5 +59,29 @@ def handle_scan(
         print(f"Error rendering report: {e}", file=sys.stderr)
         return 2
 
-
     return 0
+
+
+def handle_secrets(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated secret scanning workflow against target path.
+
+    Args:
+        target_path_str: Target directory or file path string.
+        json_output: Render output as JSON if True, else console text.
+        verbose: Enable verbose logging if True.
+
+    Returns:
+        int: Status exit code.
+    """
+    secrets_registry = ScannerRegistry(register_defaults=False)
+    secrets_registry.register(SecretScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=secrets_registry,
+    )

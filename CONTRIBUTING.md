@@ -2,8 +2,6 @@
 
 Thank you for your interest in contributing to **SentinelScan**! We welcome contributions from security engineers, developers, and open-source enthusiasts.
 
-This guide provides instructions for setting up your development environment, running tests, linting, adding new scanner modules, and submitting pull requests.
-
 ---
 
 ## 🛠️ 1. Local Development Setup
@@ -41,62 +39,38 @@ Before submitting code, ensure that all unit tests, linters, and type checkers p
 
 ### Run Unit and Integration Tests
 ```bash
-pytest
-```
-
-To run with verbose coverage output:
-```bash
-pytest -v
+python -m pytest
 ```
 
 ### Run Linting & Formatting Checks
-We use **Ruff** for fast linting and code formatting checks.
-
 ```bash
-# Check code style and common errors
-ruff check .
-
-# Automatically fix auto-fixable lint issues
-ruff check --fix .
-
-# Check formatting
-ruff format --check .
+python -m ruff check .
 ```
 
 ### Run Type Checking
-We use **mypy** for strict static type verification.
-
 ```bash
-mypy src/sentinelscan
+python -m mypy src/sentinelscan
 ```
 
 ---
 
-## 🔌 3. Adding a New Scanner Module
+## 🔌 3. Adding New Secret Detectors
 
-SentinelScan is designed to make adding scanner modules straightforward.
+When adding a new secret detector to `src/sentinelscan/scanners/secret_scanner.py`:
 
-### Guidelines for New Scanners
-1. **Inherit from `BaseScanner`**: Located in `sentinelscan.scanners.base`.
-2. **Implement Required Properties**:
-   - `name`: Lowercase string identifier (e.g. `python-sast`, `tf-sec-checker`).
-   - `category`: Select appropriate `Category` enum (`Category.SAST`, `Category.SECRET`, `Category.IAC`, etc.).
-   - `description`: Human-readable summary of checks.
-3. **Implement `is_available(target: Target) -> bool`**: Return `False` if required tools or file types are missing.
-4. **Implement `scan(target: Target) -> list[Finding]`**: Perform assessment and return normalized `Finding` objects.
-5. **Never Store Raw Secrets**: Never include actual secret credentials or private key content in descriptions, titles, or metadata.
-6. **No Raw Code Snippets**: Populate `Location(file_path=path, start_line=line)` without attaching raw source code snippets.
-
-Reference Example: Check `examples/mock_scanner.py` for a working implementation example.
+1. **Add Detector Method**: Add a method `_detect_<secret_name>(self, line: str, line_num: int, fpath: Path, findings: list[Finding])`.
+2. **Use Pre-compiled Regex**: Pre-compile patterns in `__init__`.
+3. **Always Mask Secret Values**: Call `mask_token()` or substitute credentials with `[REDACTED]`. **NEVER store or pass raw secret strings to `Finding` constructors, descriptions, impacts, remediations, or metadata.**
+4. **Register Method in `_analyze_line`**: Add your detector method to the `detectors` list in `_analyze_line()`.
+5. **Add Automated Secret Leak Tests**: Write unit tests in `tests/unit/test_secret_scanner.py` explicitly asserting `assert raw_secret not in str(f.to_dict())` and `assert raw_secret not in json_output`.
 
 ---
 
 ## 🔒 4. Security Principles & Guidelines
 
-When contributing code to SentinelScan:
-- **Never hardcode secrets**: Do not commit API keys, tokens, or sample credentials into tests or source files.
-- **Safe Defaults**: All operations must operate safely on local environments without modifying target files.
-- **Isolated Execution**: Ensure scanner logic catches domain-specific errors gracefully and does not rely on global mutable state.
+- **Never commit real credentials**: Synthetic test credentials in unit tests must be non-operational example strings.
+- **Detector Isolation**: Wrap individual detector execution so an exception in one detector does not abort other detectors or crash the scanner.
+- **Safe Filesystem Access**: Honor file size caps (5 MB) and binary file checks.
 
 ---
 
@@ -104,14 +78,13 @@ When contributing code to SentinelScan:
 
 1. **Create a Feature Branch**:
    ```bash
-   git checkout -b feature/add-secret-scanner
+   git checkout -b feature/add-slack-webhook-detector
    ```
 2. **Write Meaningful Commit Messages**:
-   - `feat(scanners): add initial high-entropy secret scanner module`
-   - `fix(cli): resolve exit code handling for invalid target paths`
-   - `test(reporting): add unit test for JSON credential sanitization`
+   - `feat(secrets): add Slack webhook detector to SecretScanner`
+   - `test(secrets): add automated secret leak prevention tests`
 3. **Run Full Verification Before Pushing**:
    ```bash
-   pytest && ruff check . && mypy src/sentinelscan
+   python -m pytest; python -m ruff check .; python -m mypy src/sentinelscan
    ```
-4. **Open a Pull Request**: Provide a clear description of changes, motivation, and verification steps.
+4. **Open a Pull Request**: Provide a description of changes and verification results.

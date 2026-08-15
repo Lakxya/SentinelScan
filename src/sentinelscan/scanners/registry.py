@@ -7,8 +7,16 @@ from sentinelscan.scanners.base import BaseScanner
 class ScannerRegistry:
     """Synchronous, lightweight registry for storing and retrieving scanner instances."""
 
-    def __init__(self) -> None:
+    def __init__(self, register_defaults: bool = True) -> None:
         self._scanners: dict[str, BaseScanner] = {}
+        if register_defaults:
+            self._register_defaults()
+
+    def _register_defaults(self) -> None:
+        """Register built-in default scanner modules."""
+        from sentinelscan.scanners.secret_scanner import SecretScanner
+
+        self.register(SecretScanner())
 
     def register(self, scanner: BaseScanner) -> None:
         """Register a scanner instance.

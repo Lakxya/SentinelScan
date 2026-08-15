@@ -4,7 +4,7 @@ import argparse
 import sys
 from collections.abc import Sequence
 
-from sentinelscan.cli.commands import handle_scan, handle_version
+from sentinelscan.cli.commands import handle_scan, handle_secrets, handle_version
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -46,6 +46,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'secrets' command
+    secrets_parser = subparsers.add_parser(
+        "secrets",
+        help="Run focused secret and credential scanning against a target directory or file.",
+    )
+    secrets_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for secrets (e.g. '.').",
+    )
+    secrets_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    secrets_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -60,6 +82,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "scan":
         sys.exit(
             handle_scan(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "secrets":
+        sys.exit(
+            handle_secrets(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

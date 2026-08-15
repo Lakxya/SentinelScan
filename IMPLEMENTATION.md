@@ -1,20 +1,19 @@
 # SentinelScan - Technical Implementation & Architecture Guide
 
-This document provides a comprehensive technical overview of **SentinelScan**, its current baseline architecture, data models, scanner isolation model, CLI control flow, and developer guide for extending the codebase with new security scanner modules.
+This document provides a comprehensive technical overview of **SentinelScan**, its baseline architecture, data models, scanner isolation model, CLI control flow, and technical breakdown of the **Secret & Credential Detection Scanner** (Milestone 1).
 
 ---
 
 ## 🌐 1. Project Vision
 
-SentinelScan is envisioned as an open-source, local-first security engineering CLI. It bridges static application security, infrastructure assessment, software supply chain checks, cloud posture analysis, and attack-path risk correlation into a single, cohesive developer-first tool.
+SentinelScan is an open-source, local-first security engineering CLI bridging static application security, infrastructure assessment, software supply chain checks, cloud posture analysis, and attack-path risk correlation into a single tool.
 
-### Core Security & Architectural Principles
-1. **Local-First & Safe Defaults**: All processing occurs locally. Cloud assessments are read-only by default. Active dynamic testing requires explicit user authorization.
-2. **Credential Safety**: Secret values, tokens, or private keys must never be logged, printed, or saved in finding artifacts or console reports.
-3. **No Raw Code Snippets**: The `Location` model records only file paths and line numbers (`start_line`, `end_line`), avoiding raw source snippet storage to prevent accidental data leaks.
-4. **Scanner Failure Isolation**: Scanners run inside exception boundaries. An unexpected failure in one scanner module records a `FAILED` status but **never terminates** the overall scan execution.
-5. **Correlation Readiness**: Every `Finding` includes a deterministic fingerprint (`FS-<hash>`), resource target identifier, and tags to allow future attack-path correlation without requiring model rewrites.
-6. **No Fake Findings**: The baseline architecture provides pure infrastructure and models without placeholder security findings.
+### Core Principles & Safety Guarantees
+1. **Local-First & Read-Only**: All processing occurs locally without network requests or external credential verification calls.
+2. **Strict Credential Leak Prevention**: Raw secret values are **NEVER** stored in `Finding` objects, descriptions, impacts, remediations, metadata, `Location`, logs, exceptions, console reports, or JSON output. Discovered values are strictly masked.
+3. **Location Snippet Safety**: `Location` records `file_path`, `start_line`, and `end_line` without raw source code snippets to avoid accidental data leakage.
+4. **Detector & Scanner Isolation**: Scanners and detectors execute within exception boundaries. An unexpected failure in one detector logs a warning and permits remaining detectors to run without aborting the scan.
+5. **Correlation Readiness**: Every `Finding` includes a deterministic fingerprint (`FS-<hash>`), resource target identifier, and tags for future attack-path correlation.
 
 ---
 
@@ -28,7 +27,7 @@ SentinelScan/
 │       ├── cli/
 │       │   ├── __init__.py
 │       │   ├── main.py            # Argparse entrypoint and main() execution
-│       │   └── commands.py        # Handlers for 'scan' and 'version'
+│       │   └── commands.py        # Handlers for 'scan', 'secrets', and 'version'
 │       ├── core/
 │       │   ├── __init__.py
 │       │   ├── discovery.py       # ProjectDiscoverer (path validation & tech detection)
@@ -37,7 +36,8 @@ SentinelScan/
 │       ├── scanners/
 │       │   ├── __init__.py
 │       │   ├── base.py            # Abstract BaseScanner interface
-│       │   └── registry.py        # Synchronous ScannerRegistry
+│       │   ├── registry.py        # ScannerRegistry
+│       │   └── secret_scanner.py  # SecretScanner module & detectors
 │       ├── models/
 │       │   ├── __init__.py
 │       │   ├── finding.py         # Category, Severity, Confidence, Location, Finding
@@ -59,7 +59,8 @@ SentinelScan/
 │   │   ├── test_engine.py
 │   │   ├── test_models.py
 │   │   ├── test_scanners.py
-│   │   └── test_reporting.py
+│   │   ├── test_reporting.py
+│   │   └── test_secret_scanner.py # Comprehensive SecretScanner test suite
 │   └── integration/               # End-to-end pipeline integration tests
 │       └── test_scan_flow.py
 │
@@ -76,149 +77,70 @@ SentinelScan/
 
 ---
 
-## 🧬 3. Core Models & Abstractions
+## 🔒 3. Secret Scanner Technical Design (Milestone 1)
 
-### 3.1 Finding Model (`src/sentinelscan/models/finding.py`)
-The `Finding` class normalizes security discoveries across all security domains:
+### 3.1 Detector Strategy & Rule Matrix
+The `SecretScanner` module uses pre-compiled regular expressions and Shannon entropy analysis:
 
-- `scanner`: String identifier of the originating scanner.
-- `category`: Domain enum (`SAST`, `SCA`, `DAST`, `SECRET`, `CONTAINER`, `KUBERNETES`, `IAC`, `CLOUD`, `NETWORK`, `ARCHITECTURE`).
-- `rule_id`: Identifier for the triggered security rule.
-- `title`: Short title of the vulnerability or misconfiguration.
-- `severity`: Standardized rating (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
-- `confidence`: Confidence level (`HIGH`, `MEDIUM`, `LOW`).
-- `description`: Technical explanation of the issue.
-- `impact`: Potential security risk or exposure impact.
-- `remediation`: Clear, actionable steps to fix the issue.
-- `location`: Optional `Location` instance (`file_path`, `start_line`, `end_line`).
-- `resource_id`: String identifier for target resources (e.g. AWS ARN, container image name, host:port).
-- `tags`: List of classification keywords.
-- `related_finding_ids`: List of finding IDs linked for future attack-path graph correlation.
-- `fingerprint`: 16-character SHA-256 hash computed deterministically from `scanner`, `rule_id`, `location`, `resource_id`, and `title`.
-- `finding_id`: Formatted identifier (`FS-<fingerprint>`).
+| Rule ID | Domain / Type | Pattern Strategy | Severity | Default Confidence |
+| :--- | :--- | :--- | :--- | :--- |
+| `SECRET-AWS-ACCESS-KEY` | AWS IAM | `(AKIA\|ASIA\|ABIA\|ACCA)[0-9A-Z]{16}` | `CRITICAL` | `HIGH` |
+| `SECRET-AWS-SECRET-KEY` | AWS IAM | Variable assignment context (`AWS_SECRET_ACCESS_KEY`, etc.) + 40-char string | `CRITICAL` | `HIGH` |
+| `SECRET-PRIVATE-KEY` | Cryptographic Keys | `-----BEGIN (?:RSA \|EC \|DSA \|OPENSSH )?PRIVATE KEY-----` | `CRITICAL` | `HIGH` |
+| `SECRET-GITHUB-TOKEN` | GitHub Auth | `(ghp_\|gho_\|ghu_\|ghs_\|ghr_)[a-zA-Z0-9]{36}` or `github_pat_[a-zA-Z0-9_]{82}` | `CRITICAL` | `HIGH` |
+| `SECRET-JWT` | Web Auth | `eyJ[a-zA-Z0-9_-]{10,}\.eyJ[a-zA-Z0-9_-]{10,}\.[a-zA-Z0-9_-]{10,}` | `HIGH` | `HIGH` |
+| `SECRET-API-KEY` | API Services | Service patterns (Slack `xox[baprs]-`, Stripe `sk_live_`, Google `AIzaSy`, SendGrid `SG.`) | `HIGH` | `HIGH` |
+| `SECRET-DATABASE-CREDENTIAL` | Databases | URLs `(postgres\|mysql\|mongodb\|redis)://user:pass@host` | `CRITICAL` | `HIGH` |
+| `SECRET-GENERIC` | Generic Secrets | Suspicious variable names (`API_KEY`, `SECRET`, `PASSWORD`) + string + Entropy $H \ge 3.6$ | `MEDIUM` | `MEDIUM` / `LOW` |
 
-### 3.2 Target Model (`src/sentinelscan/models/target.py`)
-`Target` encapsulates discovered information about the scan subject:
-- Path details (`path`, `is_directory`, `is_file`, `is_git_repo`).
-- Content size and file count.
-- `detected_indicators`: List of detected tech frameworks (`python`, `javascript`, `docker`, `kubernetes`, `iac-terraform`, `aws-cloud`).
+### 3.2 Shannon Entropy Calculation
+Entropy is computed in bits per character:
+$$H = -\sum_{i=1}^{N} P(x_i) \log_2 P(x_i)$$
 
-### 3.3 Scan Execution Result (`src/sentinelscan/models/result.py`)
-`ScanResult` separates finding count from scanner health status:
+High entropy is **never** used alone to generate `CRITICAL` findings. Instead, it serves as supporting evidence for generic secret variable assignments. Strings with entropy $H < 3.6$ or matching common placeholders (`example`, `placeholder`, `12345678`, `your_key_here`) are filtered out.
 
-- `ScannerExecutionStatus`: Enum with values `SUCCESS`, `UNAVAILABLE`, `FAILED`, `SKIPPED`.
-- `ScannerExecutionResult`: Contains `scanner_name`, `status`, `finding_count`, `error_message`, and `duration_seconds`.
-- **Key Guarantee**: A scanner returning 0 findings is marked as `SUCCESS` with `finding_count=0`. A scanner throwing an unhandled exception is marked as `FAILED` with `error_message`.
+### 3.3 Credential Masking Engine
+- **Short tokens (<= 8 chars)**: `raw[0] + "*" * (n-2) + raw[-1]` (e.g. `s***t`)
+- **Medium tokens (9-16 chars)**: `raw[:2] + "*" * (n-4) + raw[-2:]`
+- **Long tokens (> 16 chars)**: `raw[:4] + "*" * (n-8) + raw[-4:]` (e.g. `AKIA************CDEF`)
+- **Database URLs**: Password portion replaced with `[REDACTED]` (e.g. `postgresql://user:[REDACTED]@localhost:5432/db`)
+- **Private Keys**: Replaced with fixed string `"[PRIVATE KEY REDACTED]"`
 
----
-
-## ⚙️ 4. Scanner Abstraction & Registry
-
-### 4.1 BaseScanner Interface (`src/sentinelscan/scanners/base.py`)
-All scanner modules inherit from `BaseScanner`:
-
-```python
-from abc import ABC, abstractmethod
-from sentinelscan.models.finding import Category, Finding
-from sentinelscan.models.target import Target
-
-class BaseScanner(ABC):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        """Unique identifier for scanner."""
-        pass
-
-    @property
-    @abstractmethod
-    def category(self) -> Category:
-        """Category domain."""
-        pass
-
-    @property
-    @abstractmethod
-    def description(self) -> str:
-        """Description of checks."""
-        pass
-
-    def is_available(self, target: Target) -> bool:
-        """Return True if target contains required files or prerequisites."""
-        return True
-
-    @abstractmethod
-    def scan(self, target: Target) -> list[Finding]:
-        """Execute scan and return findings."""
-        pass
-```
-
-### 4.2 Simple ScannerRegistry (`src/sentinelscan/scanners/registry.py`)
-In accordance with design requirements, `ScannerRegistry` is kept synchronous, lightweight, and simple for the initial milestone. It provides:
-- `register(scanner: BaseScanner)`: Registers a scanner instance, raising `ScannerAlreadyRegisteredError` if duplicate names exist.
-- `get(name: str)`: Looks up a scanner by name, raising `ScannerNotFoundError` if missing.
-- `list_all()`: Returns registered scanners list.
+### 3.4 Filesystem Safety & Performance Rules
+- **Binary Exclusion**: Files with binary extensions (`.png`, `.jpg`, `.pdf`, `.exe`, `.pyc`, `.zip`, etc.) or containing null bytes `\x00` in the first 1024 bytes are skipped.
+- **File Size Cap**: Files larger than 5 MB (`5 * 1024 * 1024` bytes) are skipped.
+- **Directory Exclusions**: `.git`, `.venv`, `node_modules`, `build`, `dist`, `__pycache__`, `.pytest_cache`, `.mypy_cache`, `.ruff_cache`, `.sentinelscan` are excluded from recursive directory traversal.
+- **Symlink Protection**: Traversal avoids external or broken symlinks (`follow_symlinks=False`).
+- **Encoding Safety**: Text files are read with `errors="ignore"` to handle non-UTF-8 bytes without throwing unhandled exceptions.
 
 ---
 
-## 🛠️ 5. Step-by-Step: Adding a New Scanner Module
+## 🛠️ 4. CLI Commands & Execution Flow
 
-To add a new scanner module (for example, a custom Secret detector):
+SentinelScan provides two primary scan entrypoints:
 
-1. **Create scanner file**: Add a new file under `src/sentinelscan/scanners/` (e.g., `secret_scanner.py`).
-2. **Implement BaseScanner**:
-   ```python
-   from sentinelscan.models.finding import Category, Confidence, Finding, Location, Severity
-   from sentinelscan.models.target import Target
-   from sentinelscan.scanners.base import BaseScanner
-
-   class SecretScanner(BaseScanner):
-       @property
-       def name(self) -> str:
-           return "secret-detector"
-
-       @property
-       def category(self) -> Category:
-           return Category.SECRET
-
-       @property
-       def description(self) -> str:
-           return "Scans files for embedded high-entropy tokens."
-
-       def is_available(self, target: Target) -> bool:
-           return target.file_count > 0
-
-       def scan(self, target: Target) -> list[Finding]:
-           findings = []
-           # Implement inspection logic safely without capturing raw secret values in finding output
-           return findings
-   ```
-3. **Register scanner**: Register your scanner class with `ScannerRegistry` during initialization or plugin loading.
-4. **Write unit tests**: Add unit tests under `tests/unit/` verifying `is_available()` behavior, finding generation, and error resilience.
+1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (including `SecretScanner`).
+2. **`sentinelscan secrets <path>`**: Runs target discovery and executes dedicated `SecretScanner` analysis.
 
 ---
 
-## 🔬 6. Testing Strategy
+## 🔬 5. Testing Strategy
 
-The test suite is built using `pytest` and structured into unit and integration tiers:
+The test suite covers positive detections, false positive exclusions, filesystem edge cases, detector isolation, and automated secret leak prevention:
 
-- **Unit Tests (`tests/unit/`)**:
-  - `test_cli.py`: Parser option parsing, version output, exit code 1 on non-existent targets.
-  - `test_discovery.py`: Target path verification, file vs directory classification, tech indicator recognition.
-  - `test_engine.py`: Scanner failure isolation, execution timing, status classification.
-  - `test_models.py`: Deterministic fingerprint computation, `Location` field constraints, zero findings vs failure distinction.
-  - `test_scanners.py`: `ScannerRegistry` lifecycle and duplicate protection.
-  - `test_reporting.py`: JSON format validation and recursive sensitive data sanitization (`sanitize_sensitive_data`).
-- **Integration Tests (`tests/integration/`)**:
-  - `test_scan_flow.py`: Complete pipeline execution from discovery through scanner execution to report output.
+- `test_secret_scanner.py`:
+  - `test_entropy_calculation`: Validates Shannon entropy values.
+  - `test_mask_token_helper`: Verifies token masking outputs.
+  - `test_aws_access_key_detection_and_leak_prevention`: Asserts raw secret values never appear in finding repr, description, impact, remediation, metadata, console output, or JSON.
+  - `test_aws_secret_key_requires_context`: Verifies context requirements for AWS secret keys.
+  - `test_private_key_safety`: Ensures PEM keys output fixed `[PRIVATE KEY REDACTED]`.
+  - `test_database_url_credential_masking`: Verifies password stripping in database URLs.
+  - `test_generic_secret_detection_and_placeholder_negative`: Verifies generic secret matching and placeholder filtering.
+  - `test_filesystem_safety_binary_and_large_files`: Validates skipping of binary, large, and unreadable files.
+  - `test_detector_isolation`: Proves failure in one detector function does not abort other detectors.
 
 ---
 
-## 🎯 7. Current Limitations & Next Steps
+## 🎯 6. Next Steps
 
-### Current Limitations
-- Security scanner modules (SAST, SCA, DAST, Secrets, Cloud, Container) are not populated yet; only infrastructure, interfaces, discovery, engine, models, and reporters are present.
-- Output currently targets terminal console text and JSON; SARIF and HTML report renderers will be added in future milestones.
-
-### Recommended Next Milestone (Milestone 2)
-Implement the first active scanner modules:
-1. **Secret & Credential Detection Module**: High-entropy token detection with regex rule engine and secret value masking.
-2. **Basic SAST Scanner Module**: Python AST analysis for high-risk functions (e.g. `eval()`, `exec()`, `shell=True`).
+- **Milestone 2 (SAST / Static Code Analysis)**: Python AST static analyzer flagging dangerous functions (`eval()`, `exec()`, `shell=True`).

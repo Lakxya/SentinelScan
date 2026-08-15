@@ -31,7 +31,7 @@ class DummyScanner(BaseScanner):
 
 def test_scanner_registry_lifecycle():
     """Verify scanner registration, lookup, listing, and clearing."""
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     assert len(registry) == 0
 
     s1 = DummyScanner("scanner-1")
@@ -48,7 +48,7 @@ def test_scanner_registry_lifecycle():
 
 def test_scanner_registry_duplicate_registration_raises_error():
     """Verify registering two scanners with the same name raises error."""
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     s1 = DummyScanner("duplicate-name")
     s2 = DummyScanner("duplicate-name")
 
@@ -59,6 +59,6 @@ def test_scanner_registry_duplicate_registration_raises_error():
 
 def test_scanner_registry_lookup_missing_raises_error():
     """Verify getting a non-existent scanner raises ScannerNotFoundError."""
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     with pytest.raises(ScannerNotFoundError):
         registry.get("non-existent")

@@ -57,8 +57,9 @@ def test_full_scan_pipeline_integration(tmp_path):
     assert "iac-terraform" in target.detected_indicators
 
     # 3. Register scanner & execute scan engine
-    registry = ScannerRegistry()
+    registry = ScannerRegistry(register_defaults=False)
     registry.register(SampleIaCScanner())
+
 
     engine = ScanEngine(registry=registry)
     result = engine.run(target)
