@@ -6,7 +6,9 @@ from sentinelscan import __version__
 from sentinelscan.core.discovery import ProjectDiscoverer
 from sentinelscan.core.engine import ScanEngine
 from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
+from sentinelscan.core.graph_builder import ArchitectureGraphBuilder
 from sentinelscan.reporting.console import ConsoleReporter
+from sentinelscan.reporting.graph_reporter import JsonGraphReporter, TerminalGraphReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.aws_scanner import AwsScanner
 from sentinelscan.scanners.dast_scanner import DastScanner
@@ -197,3 +199,40 @@ def handle_dast(
         verbose=verbose,
         registry=dast_registry,
     )
+
+
+def handle_graph(
+    target_path_str: str = ".",
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute architecture graph discovery workflow against target path and associate findings."""
+    setup_logging(verbose=verbose)
+
+    discoverer = ProjectDiscoverer()
+    try:
+        target = discoverer.discover(target_path_str)
+    except (TargetNotFoundError, InvalidTargetError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:  # noqa: BLE001
+        print(f"Error: Failed to discover target: {e}", file=sys.stderr)
+        return 1
+
+    # Execute scanners to obtain findings for node association
+    engine = ScanEngine()
+    scan_result = engine.run(target)
+
+    # Build architecture graph
+    builder = ArchitectureGraphBuilder()
+    graph = builder.build(target, scan_result=scan_result)
+
+    reporter = JsonGraphReporter() if json_output else TerminalGraphReporter()
+    try:
+        output = reporter.render(graph) if isinstance(reporter, JsonGraphReporter) else reporter.render(graph, target_path_str=target_path_str)
+        print(output)
+    except Exception as e:  # noqa: BLE001
+        print(f"Error rendering graph report: {e}", file=sys.stderr)
+        return 2
+
+    return 0

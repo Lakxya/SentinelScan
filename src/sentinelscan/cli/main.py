@@ -8,6 +8,7 @@ from sentinelscan.cli.commands import (
     handle_aws,
     handle_dast,
     handle_docker,
+    handle_graph,
     handle_iac,
     handle_k8s,
     handle_sast,
@@ -245,6 +246,30 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'graph' command
+    graph_parser = subparsers.add_parser(
+        "graph",
+        help="Build and display local architecture resource and relationship graph.",
+    )
+    graph_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        metavar="PATH",
+        help="Target directory or file path to construct graph for (defaults to '.').",
+    )
+    graph_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render architecture graph output in structured JSON format.",
+    )
+    graph_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -334,6 +359,15 @@ def main(args: Sequence[str] | None = None) -> None:
             handle_dast(
                 target_path_str=parsed.target,
                 target_url=parsed.target_url,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "graph":
+        sys.exit(
+            handle_graph(
+                target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
             )

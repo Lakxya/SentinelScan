@@ -17,7 +17,9 @@ This document outlines the official development roadmap for SentinelScan. Each c
 | **Kubernetes Security Analysis** | `IMPLEMENTED` | v0.7.0 | Static Kubernetes manifest analysis (privileged containers, root users, resource limits, host namespaces, allowPrivilegeEscalation, RBAC cluster-admin, plain text secret data). |
 | **AWS Cloud Posture Assessment** | `IMPLEMENTED` | v0.8.0 | Static AWS policy and posture scanner (wildcard IAM actions/resources, iam:PassRole, S3 public/unencrypted policies, KMS key policies, local credentials masking, MFA profiles). |
 | **Dynamic Testing (DAST)** | `IMPLEMENTED` | v0.9.0 | Web application & DAST scanner (OpenAPI spec validation, unauthenticated endpoints, HTTP security headers, CORS policies, server banner disclosure, explicit --target-url read-only header inspection). |
-| **Network Security Assessment** | `PLANNED` | v1.0.0 | Authorized local port and service banner assessment module. |
+| **Architecture Graph Capability** | `IMPLEMENTED` | v1.0.0 | Local read-only architecture graph discovery (Terraform, K8s, AWS IAM, Docker relationships, finding association, terminal ASCII trees, JSON serialization). |
+| **Network Security Assessment** | `PLANNED` | v1.1.0 | Authorized local port and service banner assessment module. |
+
 
 
 
@@ -50,6 +52,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 - **v0.7.0 (Milestone 07 - Kubernetes Scanner)**: Built static Kubernetes security scanner module, multi-document YAML parser (`PyYAML` `SafeLoader`), workload controller navigation, RBAC policy rules, secret masking, zero `kubectl` execution guarantees, and `sentinelscan k8s` subcommand.
 - **v0.8.0 (Milestone 08 - AWS Scanner)**: Built static AWS policy & posture scanner module, IAM document validator (Statement object & list support), 8 security rules, credential masking via `mask_token()`, zero AWS CLI/network calls, and `sentinelscan aws` subcommand.
 - **v0.9.0 (Milestone 09 - DAST Scanner)**: Built Web Application & DAST scanner module, OpenAPI v3/v2 validator, web server config parser, 8 security rules, 100% offline static default scan, explicit `--target-url` active read-only header inspector with cross-host redirect safeguards, and `sentinelscan dast` subcommand.
+- **v1.0.0 (Milestone 10 - Architecture Graph)**: Built local read-only architecture graph discovery module, Node/Edge data models, relationship extraction engine (Terraform, Kubernetes, AWS IAM, Docker), finding association, terminal ASCII tree and JSON reporters, and `sentinelscan graph` subcommand.
+
 
 
 

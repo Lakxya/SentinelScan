@@ -4,6 +4,7 @@ from sentinelscan.cli.commands import (
     handle_aws,
     handle_dast,
     handle_docker,
+    handle_graph,
     handle_iac,
     handle_k8s,
     handle_sast,
@@ -147,3 +148,15 @@ def test_cli_dast_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "dast-scanner" in captured.out
+
+
+def test_cli_graph_command(capsys):
+    """Verify dedicated graph command builds and displays architecture graph."""
+    parser = create_parser()
+    args = parser.parse_args(["graph", "."])
+    assert args.command == "graph"
+
+    exit_code = handle_graph(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "SentinelScan Architecture Graph" in captured.out
