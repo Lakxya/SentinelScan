@@ -8,6 +8,7 @@ from sentinelscan.core.engine import ScanEngine
 from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
+from sentinelscan.scanners.aws_scanner import AwsScanner
 from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.k8s_scanner import KubernetesScanner
@@ -161,4 +162,20 @@ def handle_k8s(
         json_output=json_output,
         verbose=verbose,
         registry=k8s_registry,
+    )
+
+
+def handle_aws(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated AWS security posture scanning workflow against target path."""
+    aws_registry = ScannerRegistry(register_defaults=False)
+    aws_registry.register(AwsScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=aws_registry,
     )

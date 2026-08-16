@@ -15,7 +15,9 @@ This document outlines the official development roadmap for SentinelScan. Each c
 | **Software Composition Analysis (SCA)** | `IMPLEMENTED` | v0.5.0 | Vulnerability scanner for Python (`requirements.txt`, `pyproject.toml`, `poetry.lock`) and JavaScript (`package.json`, `package-lock.json`) using OSV two-stage API, npm SemVer, and local cache. |
 | **Docker Security Analysis** | `IMPLEMENTED` | v0.6.0 | Static Dockerfile misconfiguration analysis (root user, base image pinning, embedded secrets, dangerous ADD, sensitive ports, missing HEALTHCHECK). |
 | **Kubernetes Security Analysis** | `IMPLEMENTED` | v0.7.0 | Static Kubernetes manifest analysis (privileged containers, root users, resource limits, host namespaces, allowPrivilegeEscalation, RBAC cluster-admin, plain text secret data). |
-| **AWS Cloud Posture Assessment** | `PLANNED` | v0.8.0 | Read-only AWS security posture assessment module. |
+| **AWS Cloud Posture Assessment** | `IMPLEMENTED` | v0.8.0 | Static AWS policy and posture scanner (wildcard IAM actions/resources, iam:PassRole, S3 public/unencrypted policies, KMS key policies, local credentials masking, MFA profiles). |
+| **Dynamic Testing (DAST)** | `PLANNED` | v0.9.0 | Local HTTP endpoint security analysis (security headers, CORS, TLS configuration). |
+
 
 
 
@@ -44,6 +46,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 - **v0.5.0 (Milestone 05 - SCA Scanner)**: Built SCA security scanner module, Python & JS dependency parsers, two-stage OSV vulnerability intelligence, npm SemVer matching, local disk cache, and `sentinelscan sca` subcommand with `--offline` support.
 - **v0.6.0 (Milestone 06 - Docker Scanner)**: Built static Docker security scanner module, deterministic Dockerfile parser, multi-stage build intelligence, 8 security rules, zero CLI/daemon execution guarantees, and `sentinelscan docker` subcommand.
 - **v0.7.0 (Milestone 07 - Kubernetes Scanner)**: Built static Kubernetes security scanner module, multi-document YAML parser (`PyYAML` `SafeLoader`), workload controller navigation, RBAC policy rules, secret masking, zero `kubectl` execution guarantees, and `sentinelscan k8s` subcommand.
+- **v0.8.0 (Milestone 08 - AWS Scanner)**: Built static AWS policy & posture scanner module, IAM document validator (Statement object & list support), 8 security rules, credential masking via `mask_token()`, zero AWS CLI/network calls, and `sentinelscan aws` subcommand.
+
 
 
 

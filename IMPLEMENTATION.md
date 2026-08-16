@@ -118,15 +118,16 @@ High entropy is **never** used alone to generate `CRITICAL` findings. Instead, i
 
 ## 🛠️ 4. CLI Commands & Execution Flow
 
-SentinelScan provides seven scan entrypoints:
+SentinelScan provides eight scan entrypoints:
 
-1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`, `IacScanner`, `ScaScanner`, `DockerScanner`, `KubernetesScanner`).
+1. **`sentinelscan scan <path>`**: Runs target discovery and executes all active registered scanners (`SecretScanner`, `SastScanner`, `IacScanner`, `ScaScanner`, `DockerScanner`, `KubernetesScanner`, `AwsScanner`).
 2. **`sentinelscan secrets <path>`**: Runs target discovery and executes dedicated `SecretScanner` analysis.
 3. **`sentinelscan sast <path>`**: Runs target discovery and executes dedicated `SastScanner` AST analysis.
 4. **`sentinelscan iac <path>`**: Runs target discovery and executes dedicated `IacScanner` analysis.
 5. **`sentinelscan sca <path> [--offline]`**: Runs target discovery and executes dedicated `ScaScanner` dependency vulnerability analysis.
 6. **`sentinelscan docker <path>`**: Runs target discovery and executes dedicated `DockerScanner` static Dockerfile security analysis.
 7. **`sentinelscan k8s <path>`**: Runs target discovery and executes dedicated `KubernetesScanner` static manifest analysis.
+8. **`sentinelscan aws <path>`**: Runs target discovery and executes dedicated `AwsScanner` static AWS policy and posture analysis.
 
 ---
 
@@ -140,12 +141,14 @@ The test suite covers positive detections, false positive exclusions, filesystem
 - `test_sca_scanner.py`: Validates Python requirement/toml/lockfile parsers, JavaScript package.json and package-lock.json (v1/v2/v3) parsers, npm SemVer caret/tilde matching, PyPA PEP 440 version matching, OSV two-stage API lookup, local disk cache, `--offline` zero-network guarantee, and network-unavailable status handling.
 - `test_docker_scanner.py`: Validates Dockerfile parser line continuations (`\`), comments (`#`), single-stage & multi-stage build stage tracking, digest pinning exclusions, root user detection, `ENV`/`ARG` secret value masking, `ADD` vs `COPY`, sensitive port exposure, missing health checks, `sudo` usage, and JSON report formatting.
 - `test_k8s_scanner.py`: Validates multi-document YAML stream parsing (`---`), workload controller template navigation (`Pod`, `Deployment`, `StatefulSet`, `DaemonSet`, `ReplicaSet`, `Job`, `CronJob`), privileged containers, root user confidence nuances (`runAsUser: 0` vs defaulting `Confidence.MEDIUM`), Pod-level securityContext inheritance, missing resource limits, host namespaces, privilege escalation, wildcard RBAC rules, `cluster-admin` bindings, ConfigMap/Secret credential masking, non-K8s YAML exclusions, and JSON report formatting.
+- `test_aws_scanner.py`: Validates IAM policy document structural validation (`Version` and `Statement`), Statement declared as object or list, wildcard Action, sensitive wildcard Resource, `iam:PassRole` wildcard, S3 public policy with/without restrictive conditions, S3 SSL transport enforcement, KMS wildcard principal, explicit `Effect: Deny` exclusions, local `.aws/credentials` key masking via `mask_token()`, elevated AWS config MFA profile detection, non-AWS JSON/YAML file exclusions, zero AWS API/CLI calls, and JSON report formatting.
 
 ---
 
 ## 🎯 6. Next Steps
 
-- **Milestone 8 (AWS Cloud Posture Assessment)**: Read-only AWS cloud security posture assessment module.
+- **Milestone 9 (Risk Correlation & Attack-Path Analysis)**: Finding correlation engine, posture scoring, and remediation reports.
+
 
 
 

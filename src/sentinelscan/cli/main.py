@@ -5,6 +5,7 @@ import sys
 from collections.abc import Sequence
 
 from sentinelscan.cli.commands import (
+    handle_aws,
     handle_docker,
     handle_iac,
     handle_k8s,
@@ -192,6 +193,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'aws' command
+    aws_parser = subparsers.add_parser(
+        "aws",
+        help="Run focused AWS security posture scanning against static IAM policies and local configuration.",
+    )
+    aws_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for AWS security misconfigurations (e.g. '.').",
+    )
+    aws_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    aws_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -261,6 +284,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "k8s":
         sys.exit(
             handle_k8s(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "aws":
+        sys.exit(
+            handle_aws(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

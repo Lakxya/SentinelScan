@@ -127,6 +127,20 @@ When extending `src/sentinelscan/scanners/k8s_scanner.py` with new Kubernetes ma
 
 ---
 
+## 🏗️ 9. Adding New AWS Security Rules
+
+When extending `src/sentinelscan/scanners/aws_scanner.py` with new AWS posture rules:
+
+1. **Zero AWS API & CLI Execution**: Never call AWS API endpoints or invoke `aws`, `cdk`, or `sam` CLI binaries. Treat policies strictly as static JSON/YAML text and INI configs.
+2. **IAM Policy Structural Validation**: Validate presence of `Version` and `Statement` nodes before analyzing documents.
+3. **Statement Object & List Support**: Handle `Statement` declared as a dictionary object or a list of dictionaries.
+4. **Explicit `Effect: Deny` Exclusions**: Deny statements are explicit security enforcement boundaries and MUST NOT generate allow-based wildcard findings.
+5. **Mask Secret Values**: Never include raw secret access keys from `.aws/credentials` or configuration files in findings. Use `mask_token()`.
+6. **Add Unit Tests**: Write unit tests in `tests/unit/test_aws_scanner.py`.
+
+---
+
+
 
 
 - **Never commit real credentials**: Synthetic test credentials in unit tests must be non-operational example strings.

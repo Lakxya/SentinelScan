@@ -1,6 +1,7 @@
 """Unit tests for SentinelScan CLI commands, parser, and argument handling."""
 
 from sentinelscan.cli.commands import (
+    handle_aws,
     handle_docker,
     handle_iac,
     handle_k8s,
@@ -120,3 +121,15 @@ def test_cli_k8s_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "k8s-scanner" in captured.out
+
+
+def test_cli_aws_command(capsys):
+    """Verify dedicated aws command executes AWS scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["aws", "."])
+    assert args.command == "aws"
+
+    exit_code = handle_aws(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "aws-scanner" in captured.out
