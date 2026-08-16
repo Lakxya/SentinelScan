@@ -8,6 +8,7 @@ from sentinelscan.cli.commands import (
     handle_iac,
     handle_k8s,
     handle_network,
+    handle_paths,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -175,3 +176,15 @@ def test_cli_network_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "network-scanner" in captured.out
+
+
+def test_cli_paths_command(capsys):
+    """Verify dedicated paths command analyzes potential attack paths."""
+    parser = create_parser()
+    args = parser.parse_args(["paths", "."])
+    assert args.command == "paths"
+
+    exit_code = handle_paths(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "SentinelScan Potential Attack Path Analysis" in captured.out

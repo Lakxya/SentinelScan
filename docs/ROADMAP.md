@@ -19,7 +19,9 @@ This document outlines the official development roadmap for SentinelScan. Each c
 | **Dynamic Testing (DAST)** | `IMPLEMENTED` | v0.9.0 | Web application & DAST scanner (OpenAPI spec validation, unauthenticated endpoints, HTTP security headers, CORS policies, server banner disclosure, explicit --target-url read-only header inspection). |
 | **Architecture Graph Capability** | `IMPLEMENTED` | v1.0.0 | Local read-only architecture graph discovery (Terraform, K8s, AWS IAM, Docker relationships, finding association, terminal ASCII trees, JSON serialization). |
 | **Network Security Assessment** | `IMPLEMENTED` | v1.1.0 | Authorized read-only TCP connect scanning, passive banner reading, stdlib TLS handshake version inspection, and single IP target resolution (`sentinelscan network <target>`). |
-| **Attack-Path & Risk Correlation** | `PLANNED` | v1.2.0 | Cross-domain attack path correlation engine linking vulnerabilities to assets. |
+| **Attack-Path & Risk Correlation** | `IMPLEMENTED` | v1.2.0 | Analytical attack path correlation engine discovering potential multi-step risk chains with max depth 5 bounds, confidence ratings, and `sentinelscan paths <path>` command. |
+| **Posture Scoring & Remediation Guidance** | `PLANNED` | v1.3.0 | Comprehensive DevSecOps security posture scoring and automated remediation guidance module. |
+
 
 
 
@@ -56,6 +58,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 - **v0.9.0 (Milestone 09 - DAST Scanner)**: Built Web Application & DAST scanner module, OpenAPI v3/v2 validator, web server config parser, 8 security rules, 100% offline static default scan, explicit `--target-url` active read-only header inspector with cross-host redirect safeguards, and `sentinelscan dast` subcommand.
 - **v1.0.0 (Milestone 10 - Architecture Graph)**: Built local read-only architecture graph discovery module, Node/Edge data models, relationship extraction engine (Terraform, Kubernetes, AWS IAM, Docker), finding association, terminal ASCII tree and JSON reporters, and `sentinelscan graph` subcommand.
 - **v1.1.0 (Milestone 11 - Network Security Assessment)**: Built authorized read-only TCP connect scanner module (`NetworkScanner`), `NetworkTargetValidator` single IP resolution, `TcpConnectScanner` stdlib TLS handshake version inspector, 8 refined security rules, 100% offline default scan guarantee, zero subprocess execution, and `sentinelscan network` subcommand.
+- **v1.2.0 (Milestone 12 - Attack-Path & Risk Correlation)**: Built analytical attack path engine (`AttackPathEngine`), `AttackStep` and `AttackPath` data models, confidence ratings (`LOW`/`MEDIUM`/`HIGH`), depth-bounded BFS traversal (max 5 hops), path hash deduplication (`AP-<hash>`), `TerminalPathReporter`, `JsonPathReporter`, and `sentinelscan paths` subcommand.
+
 
 
 

@@ -12,6 +12,7 @@ from sentinelscan.cli.commands import (
     handle_iac,
     handle_k8s,
     handle_network,
+    handle_paths,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -298,6 +299,30 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'paths' command
+    paths_parser = subparsers.add_parser(
+        "paths",
+        help="Analyze potential attack paths and correlated risk chains across architecture assets and findings.",
+    )
+    paths_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        metavar="PATH",
+        help="Target directory or file path to analyze potential attack paths for (defaults to '.').",
+    )
+    paths_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render potential attack paths in structured JSON format.",
+    )
+    paths_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -413,6 +438,15 @@ def main(args: Sequence[str] | None = None) -> None:
             handle_network(
                 target_host=parsed.target_host,
                 ports_list=ports_list,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "paths":
+        sys.exit(
+            handle_paths(
+                target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
             )
