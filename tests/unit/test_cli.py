@@ -3,6 +3,7 @@
 from sentinelscan.cli.commands import (
     handle_docker,
     handle_iac,
+    handle_k8s,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -107,3 +108,15 @@ def test_cli_docker_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "docker-scanner" in captured.out
+
+
+def test_cli_k8s_command(capsys):
+    """Verify dedicated k8s command executes Kubernetes scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["k8s", "."])
+    assert args.command == "k8s"
+
+    exit_code = handle_k8s(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "k8s-scanner" in captured.out

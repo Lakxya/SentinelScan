@@ -16,6 +16,7 @@ class ScannerRegistry:
         """Instantiate and register standard SentinelScan security scanners."""
         from sentinelscan.scanners.docker_scanner import DockerScanner
         from sentinelscan.scanners.iac_scanner import IacScanner
+        from sentinelscan.scanners.k8s_scanner import KubernetesScanner
         from sentinelscan.scanners.sast_scanner import SastScanner
         from sentinelscan.scanners.sca_scanner import ScaScanner
         from sentinelscan.scanners.secret_scanner import SecretScanner
@@ -25,6 +26,8 @@ class ScannerRegistry:
         self.register(IacScanner())
         self.register(ScaScanner())
         self.register(DockerScanner())
+        self.register(KubernetesScanner())
+
 
 
     def register(self, scanner: BaseScanner) -> None:

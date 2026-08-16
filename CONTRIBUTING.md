@@ -115,6 +115,19 @@ When extending `src/sentinelscan/scanners/docker_scanner.py` with new Dockerfile
 
 ---
 
+## 🏗️ 8. Adding New Kubernetes Security Rules
+
+When extending `src/sentinelscan/scanners/k8s_scanner.py` with new Kubernetes manifest rules:
+
+1. **Zero Cluster Execution**: Never call `kubectl`, `helm`, `kustomize`, or Kubernetes API server endpoints. Treat manifests strictly as static YAML/JSON text.
+2. **Workload Controller Navigation**: Extract Pod specs across all workload controllers using `K8sManifestParser.extract_pod_spec()` (`Pod`, `Deployment`, `StatefulSet`, `DaemonSet`, `ReplicaSet`, `Job`, `CronJob`).
+3. **Pod Inheritance & Confidence Nuances**: Pod-level securityContext settings (e.g. `runAsNonRoot: true`) are inherited by containers. Set `Confidence.HIGH` for explicit `runAsUser: 0`/`runAsNonRoot: false` and `Confidence.MEDIUM` when defaulting.
+4. **Mask Secret Values**: Never include raw secret values from ConfigMap or `Secret` manifests (`stringData`/`data`) in findings. Use `mask_token()`.
+5. **Add Unit Tests**: Write unit tests in `tests/unit/test_k8s_scanner.py`.
+
+---
+
+
 
 - **Never commit real credentials**: Synthetic test credentials in unit tests must be non-operational example strings.
 - **Detector Isolation**: Wrap individual detector execution so an exception in one detector does not abort other detectors or crash the scanner.

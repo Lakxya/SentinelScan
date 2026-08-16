@@ -7,6 +7,7 @@ from collections.abc import Sequence
 from sentinelscan.cli.commands import (
     handle_docker,
     handle_iac,
+    handle_k8s,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -169,6 +170,28 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'k8s' command
+    k8s_parser = subparsers.add_parser(
+        "k8s",
+        help="Run focused Kubernetes security scanning against static YAML/JSON manifests.",
+    )
+    k8s_parser.add_argument(
+        "target",
+        metavar="PATH",
+        help="Target directory or file path to assess for Kubernetes manifest security misconfigurations (e.g. '.').",
+    )
+    k8s_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    k8s_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -229,6 +252,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "docker":
         sys.exit(
             handle_docker(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "k8s":
+        sys.exit(
+            handle_k8s(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

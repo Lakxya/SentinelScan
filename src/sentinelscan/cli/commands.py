@@ -10,6 +10,7 @@ from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
+from sentinelscan.scanners.k8s_scanner import KubernetesScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
 from sentinelscan.scanners.sca_scanner import ScaScanner
@@ -144,4 +145,20 @@ def handle_docker(
         json_output=json_output,
         verbose=verbose,
         registry=docker_registry,
+    )
+
+
+def handle_k8s(
+    target_path_str: str,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated Kubernetes security scanning workflow against target path."""
+    k8s_registry = ScannerRegistry(register_defaults=False)
+    k8s_registry.register(KubernetesScanner())
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=k8s_registry,
     )
