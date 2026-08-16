@@ -8,10 +8,12 @@ from sentinelscan.core.discovery import ProjectDiscoverer
 from sentinelscan.core.engine import ScanEngine
 from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.core.graph_builder import ArchitectureGraphBuilder
+from sentinelscan.core.posture_engine import PostureEngine
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.graph_reporter import JsonGraphReporter, TerminalGraphReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.reporting.path_reporter import JsonPathReporter, TerminalPathReporter
+from sentinelscan.reporting.posture_reporter import JsonPostureReporter, TerminalPostureReporter
 from sentinelscan.scanners.aws_scanner import AwsScanner
 from sentinelscan.scanners.dast_scanner import DastScanner
 from sentinelscan.scanners.docker_scanner import DockerScanner
@@ -291,6 +293,47 @@ def handle_paths(
         print(output)
     except Exception as e:  # noqa: BLE001
         print(f"Error rendering attack path report: {e}", file=sys.stderr)
+        return 2
+
+    return 0
+
+
+def handle_posture(
+    target_path_str: str = ".",
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute DevSecOps security posture scoring and remediation guidance workflow against target path."""
+    setup_logging(verbose=verbose)
+
+    discoverer = ProjectDiscoverer()
+    try:
+        target = discoverer.discover(target_path_str)
+    except (TargetNotFoundError, InvalidTargetError) as e:
+        print(f"Error: {e}", file=sys.stderr)
+        return 1
+    except Exception as e:  # noqa: BLE001
+        print(f"Error: Failed to discover target: {e}", file=sys.stderr)
+        return 1
+
+    engine = ScanEngine()
+    scan_result = engine.run(target)
+
+    builder = ArchitectureGraphBuilder()
+    graph = builder.build(target, scan_result=scan_result)
+
+    path_engine = AttackPathEngine(max_depth=5)
+    attack_paths = path_engine.discover_paths(graph, scan_result=scan_result)
+
+    posture_engine = PostureEngine()
+    posture_score = posture_engine.evaluate_posture(scan_result, attack_paths=attack_paths)
+
+    reporter = JsonPostureReporter() if json_output else TerminalPostureReporter()
+    try:
+        output = reporter.render(posture_score) if isinstance(reporter, JsonPostureReporter) else reporter.render(posture_score, target_path_str=target_path_str)
+        print(output)
+    except Exception as e:  # noqa: BLE001
+        print(f"Error rendering posture report: {e}", file=sys.stderr)
         return 2
 
     return 0

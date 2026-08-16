@@ -3,6 +3,7 @@
 from sentinelscan.models.attack_path import AttackPath, AttackStep
 from sentinelscan.models.finding import Category, Confidence, Finding, Location, Severity
 from sentinelscan.models.graph import ArchitectureGraph, Edge, EdgeType, Node, NodeType
+from sentinelscan.models.posture import DeductionTrace, DomainScore, PostureScore, RemediationAdvice
 from sentinelscan.models.result import ScannerExecutionResult, ScannerExecutionStatus, ScanResult
 from sentinelscan.models.target import Target
 
@@ -12,12 +13,16 @@ __all__ = [
     "AttackStep",
     "Category",
     "Confidence",
+    "DeductionTrace",
+    "DomainScore",
     "Edge",
     "EdgeType",
     "Finding",
     "Location",
     "Node",
     "NodeType",
+    "PostureScore",
+    "RemediationAdvice",
     "ScanResult",
     "ScannerExecutionResult",
     "ScannerExecutionStatus",

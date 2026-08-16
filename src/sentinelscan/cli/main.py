@@ -13,6 +13,7 @@ from sentinelscan.cli.commands import (
     handle_k8s,
     handle_network,
     handle_paths,
+    handle_posture,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -323,6 +324,30 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'posture' command
+    posture_parser = subparsers.add_parser(
+        "posture",
+        help="Calculate DevSecOps security posture scores and prioritized remediation guidance.",
+    )
+    posture_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        metavar="PATH",
+        help="Target directory or file path to evaluate posture score for (defaults to '.').",
+    )
+    posture_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render security posture score and remediation report in structured JSON format.",
+    )
+    posture_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -446,6 +471,15 @@ def main(args: Sequence[str] | None = None) -> None:
     if parsed.command == "paths":
         sys.exit(
             handle_paths(
+                target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "posture":
+        sys.exit(
+            handle_posture(
                 target_path_str=parsed.target,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,

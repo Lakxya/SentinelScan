@@ -9,6 +9,7 @@ from sentinelscan.cli.commands import (
     handle_k8s,
     handle_network,
     handle_paths,
+    handle_posture,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -188,3 +189,15 @@ def test_cli_paths_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "SentinelScan Potential Attack Path Analysis" in captured.out
+
+
+def test_cli_posture_command(capsys):
+    """Verify dedicated posture command evaluates security posture score and remediation advice."""
+    parser = create_parser()
+    args = parser.parse_args(["posture", "."])
+    assert args.command == "posture"
+
+    exit_code = handle_posture(".", json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "SentinelScan Posture & Remediation Report" in captured.out

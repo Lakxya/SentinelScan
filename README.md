@@ -19,16 +19,16 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 9. **Architecture Graph Capability** *(Implemented in v1.0.0)*
 10. **Network Security Assessment** *(Implemented in v1.1.0)*
 11. **Attack-Path & Risk Correlation** *(Implemented in v1.2.0)*
-12. Posture Scoring & Remediation Guidance
+12. **Posture Scoring & Remediation Guidance** *(Implemented in v1.3.0)*
 
 ---
 
 ## 📌 Current Status & Features
 
 > [!NOTE]
-> **Current Version: `v1.2.0` (Milestone 12: Attack-Path & Risk Correlation Active)**
+> **Current Version: `v1.3.0` (Milestone 13: Posture Scoring & Remediation Guidance Active)**
 >
-> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, **AWS Posture Scanner**, **DAST Web Security Scanner**, **Architecture Graph Capability**, **Network Security Assessment Scanner**, and **Attack-Path & Risk Correlation Engine** (`AttackPathEngine`).
+> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, **AWS Posture Scanner**, **DAST Web Security Scanner**, **Architecture Graph Capability**, **Network Security Assessment Scanner**, **Attack-Path & Risk Correlation Engine**, and **Posture Scoring & Remediation Engine** (`PostureEngine`).
 
 ### Supported Security Modules & Capabilities
 - **Secret Scanner (`sentinelscan secrets`)**: AWS keys, GitHub PATs, JWTs, PEM private keys, DB connection URLs, service API keys, generic high-entropy secrets.
@@ -42,15 +42,17 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 - **Architecture Graph (`sentinelscan graph`)**: Local read-only resource discovery and relationship graph mapping Terraform dependencies, Kubernetes workloads to Secrets/ConfigMaps/ServiceAccounts, AWS IAM policies to S3 buckets, Docker base images, and scanner security findings.
 - **Network Scanner (`sentinelscan network`)**: Authorized read-only TCP connect scanning, passive banner reading, stdlib TLS handshake version verification, and single IP target resolution against explicit user-requested target hosts.
 - **Attack-Path Engine (`sentinelscan paths`)**: Analytical correlation engine discovering potential multi-step risk chains linking entry assets to sensitive target resources with depth bounds (max 5 hops), confidence ratings (`LOW`/`MEDIUM`/`HIGH`), and composite risk scores.
+- **Posture Engine (`sentinelscan posture`)**: Explainable DevSecOps posture scoring engine calculating overall score (0-100 scale), letter grades (`A+` to `F`), domain score breakdowns, deduction traceability, and prioritized fix advice.
 
 ### 🔒 Security & Privacy Guarantees
 - **Terminal CLI Exclusivity**: SentinelScan is strictly a terminal CLI tool. Zero web interfaces, dashboards, or web servers.
 - **Zero Raw Secret Exposure**: Secret values are strictly masked using `mask_token()` before constructing finding objects or graph metadata.
-- **100% Offline Default Scans & Path Analysis**: Running `sentinelscan scan .`, `sentinelscan graph .`, or `sentinelscan paths .` performs 100% offline static analysis. Target code, containers, cloud CLI commands, or network sockets are **NEVER** executed.
+- **100% Offline Default Scans, Path & Posture Analysis**: Running `sentinelscan scan .`, `sentinelscan graph .`, `sentinelscan paths .`, or `sentinelscan posture .` performs 100% offline static analysis. Target code, containers, cloud CLI commands, or network sockets are **NEVER** executed.
 - **Non-Assertive Potential Path Analysis**: Analyzes potential correlated risk chains without claiming exploitability or performing active attack payloads.
 - **Authorized Active Assessment**: Active network checks run **ONLY** when explicitly requested via `sentinelscan network <target-host>`. Performs single read-only stdlib TCP connect checks (`socket.create_connection`) with bounded timeouts (0.5s per port).
 - **Zero Subprocess Execution**: Uses stdlib `socket` and `ssl`. Never runs `nmap`, `masscan`, `nc`, or `netcat`.
 - **Zero Exploitation, Fuzzing, or Brute Force**: Never sends attack payloads, vulnerability exploits, raw SYN packet injections, or credential brute-forcing.
+
 
 
 - **Strict Metadata Privacy**: Outbound SCA queries send ONLY package names and version strings (`{"package": {"name": "express", "ecosystem": "npm"}, "version": "4.16.0"}`). Source code, secrets, or file paths are **NEVER** transmitted.
@@ -175,36 +177,55 @@ Generate machine-readable potential attack path JSON output:
 sentinelscan paths . --json
 ```
 
+Calculate DevSecOps security posture scores and prioritized remediation guidance:
+```bash
+sentinelscan posture .
+```
+
+Generate machine-readable posture assessment JSON output:
+```bash
+sentinelscan posture . --json
+```
+
 ---
 
 ## 📋 Example Console Output
 
 ```text
 ==================================================
-     SentinelScan Potential Attack Path Analysis   
+     SentinelScan Posture & Remediation Report    
 ==================================================
 
-TARGET DISCOVERY
+SECURITY POSTURE SUMMARY
   Target Path       : .
-  Potential Paths   : 1
-  Highest Risk Score: 9.5 (CRITICAL)
+  Overall Score     : 82.5 / 100.0
+  Security Grade    : B
+  Total Findings    : 3
 
-CORRELATED POTENTIAL ATTACK PATHS
+DOMAIN BREAKDOWN
 --------------------------------------------------
-[1] [CRITICAL] (Risk Score: 9.5 | Confidence: HIGH) Potential Path: 127.0.0.1:3306 to admin_policy
-    Path ID       : AP-8a7f93b1c2d3e4f5
-    Entry Point   : net:127.0.0.1:3306
-    Impact Target : aws:iam_policy:admin_policy
+  [secret    ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
+  [sast      ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
+  [iac       ]   85.0 / 100 (Grade: B ) | 1 findings (0 Crit, 1 High)
+  [sca       ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
+  [container ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
+  [kubernetes]   92.0 / 100 (Grade: A ) | 1 findings (0 Crit, 0 High)
+  [cloud     ]   85.0 / 100 (Grade: B ) | 1 findings (1 Crit, 0 High)
+  [dast      ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
+  [network   ]  100.0 / 100 (Grade: A+) | 0 findings (0 Crit, 0 High)
 
-    Correlated Path Steps (Max Depth 5):
-    ├── Step 1: [network_service] 127.0.0.1:3306 [Finding: NET-EXPOSED-DATABASE (HIGH)]
-                 Description: Exposed MySQL database port 3306 open on '127.0.0.1:3306'.
-    ├── Step 2: [k8s_secret] db-secret [Finding: K8S-PLAIN-TEXT-SECRET-DATA (MEDIUM)]
-                 Description: Unencrypted Kubernetes Secret data.
-    └── Step 3: [aws_iam_policy] admin_policy [Finding: AWS-IAM-WILDCARD-ACTION (CRITICAL)]
-                 Description: AWS IAM policy statement contains wildcard action '*'.
+SCORE EXPLAINABILITY (DEDUCTIONS TRACE)
+--------------------------------------------------
+  -15.0 pts : [cloud] AWS-IAM-WILDCARD-ACTION on 'tf:aws_iam_policy.admin_policy' (CRITICAL/HIGH)
+  - 3.0 pts : [kubernetes] K8S-PLAIN-TEXT-SECRET-DATA on 'default/db-secret' (MEDIUM/HIGH)
 
-    Remediation   : Restrict network access and enforce principle of least privilege.
+PRIORITIZED REMEDIATION GUIDANCE
+--------------------------------------------------
+[Priority 1] Restrict AWS IAM Policy Wildcard Actions [ATTACK PATH]
+    Rule ID       : AWS-IAM-WILDCARD-ACTION (cloud)
+    Action        : Enforce explicit action statements in IAM policies instead of '*'.
+    Impact        : Reduces score penalty by 15.0 pts. Resolves correlated potential attack path.
+    Locations     : /path/to/main.tf:L12
 --------------------------------------------------
 EXECUTION COMPLETED.
 ==================================================
@@ -226,7 +247,7 @@ EXECUTION COMPLETED.
 - [x] **v1.0.0 - Architecture Graph Capability (Milestone 10)**: Local read-only architecture graph discovery mapping Terraform, Kubernetes, AWS IAM, Docker relationships, scanner finding association, terminal ASCII tree, and JSON serialization.
 - [x] **v1.1.0 - Network Security Assessment (Milestone 11)**: Authorized read-only TCP connect scanner module (`NetworkScanner`), `NetworkTargetValidator` single IP resolution, `TcpConnectScanner` stdlib TLS handshake version inspector, 8 refined security rules, 100% offline default scan guarantee, zero subprocess execution, and `sentinelscan network` subcommand.
 - [x] **v1.2.0 - Attack-Path & Risk Correlation (Milestone 12)**: Analytical attack path engine (`AttackPathEngine`), `AttackStep` and `AttackPath` data models, confidence ratings (`LOW`/`MEDIUM`/`HIGH`), depth-bounded BFS traversal (max 5 hops), path hash deduplication (`AP-<hash>`), `TerminalPathReporter`, `JsonPathReporter`, and `sentinelscan paths` subcommand.
-- [ ] **v1.3.0 - Posture Scoring & Remediation Guidance**: DevSecOps posture scoring and automated remediation guidance module.
+- [x] **v1.3.0 - Posture Scoring & Remediation Guidance (Milestone 13)**: Explainable DevSecOps posture scoring engine (`PostureEngine`) and `RemediationEngine`, domain score breakdowns, grade scale (`A+` to `F`), fingerprint deduplication, anti-double-counting caps, `TerminalPostureReporter`, `JsonPostureReporter`, and `sentinelscan posture` subcommand.
 
 ---
 
@@ -240,7 +261,8 @@ Comprehensive engineering documentation is maintained in the [`docs/`](docs/) di
 - **[TESTING.md](docs/TESTING.md)**: Quality assurance guide, pytest suite structure, and secret leak verification.
 - **[SCANNER_DEVELOPMENT.md](docs/SCANNER_DEVELOPMENT.md)**: Definitive 13-step guide for building new scanner modules.
 - **[ROADMAP.md](docs/ROADMAP.md)**: Official feature matrix and capability status breakdown.
-- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md), [`09-dast.md`](docs/milestones/09-dast.md), [`10-architecture-graph.md`](docs/milestones/10-architecture-graph.md), [`11-network-security.md`](docs/milestones/11-network-security.md), [`12-attack-paths.md`](docs/milestones/12-attack-paths.md)).
+- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md), [`09-dast.md`](docs/milestones/09-dast.md), [`10-architecture-graph.md`](docs/milestones/10-architecture-graph.md), [`11-network-security.md`](docs/milestones/11-network-security.md), [`12-attack-paths.md`](docs/milestones/12-attack-paths.md), [`13-posture-scoring.md`](docs/milestones/13-posture-scoring.md)).
+
 
 
 

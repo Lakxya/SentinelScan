@@ -20,7 +20,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 | **Architecture Graph Capability** | `IMPLEMENTED` | v1.0.0 | Local read-only architecture graph discovery (Terraform, K8s, AWS IAM, Docker relationships, finding association, terminal ASCII trees, JSON serialization). |
 | **Network Security Assessment** | `IMPLEMENTED` | v1.1.0 | Authorized read-only TCP connect scanning, passive banner reading, stdlib TLS handshake version inspection, and single IP target resolution (`sentinelscan network <target>`). |
 | **Attack-Path & Risk Correlation** | `IMPLEMENTED` | v1.2.0 | Analytical attack path correlation engine discovering potential multi-step risk chains with max depth 5 bounds, confidence ratings, and `sentinelscan paths <path>` command. |
-| **Posture Scoring & Remediation Guidance** | `PLANNED` | v1.3.0 | Comprehensive DevSecOps security posture scoring and automated remediation guidance module. |
+| **Posture Scoring & Remediation Guidance** | `IMPLEMENTED` | v1.3.0 | DevSecOps posture scoring engine (0-100 scale, A+ to F grades), domain breakdowns, deduction traceability, and prioritized fix advice (`sentinelscan posture <path>`). |
+
 
 
 
@@ -59,6 +60,8 @@ This document outlines the official development roadmap for SentinelScan. Each c
 - **v1.0.0 (Milestone 10 - Architecture Graph)**: Built local read-only architecture graph discovery module, Node/Edge data models, relationship extraction engine (Terraform, Kubernetes, AWS IAM, Docker), finding association, terminal ASCII tree and JSON reporters, and `sentinelscan graph` subcommand.
 - **v1.1.0 (Milestone 11 - Network Security Assessment)**: Built authorized read-only TCP connect scanner module (`NetworkScanner`), `NetworkTargetValidator` single IP resolution, `TcpConnectScanner` stdlib TLS handshake version inspector, 8 refined security rules, 100% offline default scan guarantee, zero subprocess execution, and `sentinelscan network` subcommand.
 - **v1.2.0 (Milestone 12 - Attack-Path & Risk Correlation)**: Built analytical attack path engine (`AttackPathEngine`), `AttackStep` and `AttackPath` data models, confidence ratings (`LOW`/`MEDIUM`/`HIGH`), depth-bounded BFS traversal (max 5 hops), path hash deduplication (`AP-<hash>`), `TerminalPathReporter`, `JsonPathReporter`, and `sentinelscan paths` subcommand.
+- **v1.3.0 (Milestone 13 - Posture Scoring & Remediation Guidance)**: Built explainable posture scoring engine (`PostureEngine`) and `RemediationEngine`, domain score breakdowns, grade scale (`A+` to `F`), fingerprint deduplication, anti-double-counting caps, `TerminalPostureReporter`, `JsonPostureReporter`, and `sentinelscan posture` subcommand.
+
 
 
 
