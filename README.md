@@ -15,7 +15,7 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 5. **Docker Security Analysis** *(Implemented in v0.6.0)*
 6. **Kubernetes Security Analysis** *(Implemented in v0.7.0)*
 7. **AWS Cloud Posture Assessment** *(Implemented in v0.8.0)*
-8. Dynamic Application Security Testing (DAST)
+8. **Dynamic Testing & Web Security (DAST)** *(Implemented in v0.9.0)*
 9. Network Security Assessment
 10. Architecture Analysis
 11. Attack-Path & Risk Correlation
@@ -26,9 +26,9 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 ## 📌 Current Status & Features
 
 > [!NOTE]
-> **Current Version: `v0.8.0` (Milestone 8: AWS Security Posture Scanner Active)**
+> **Current Version: `v0.9.0` (Milestone 9: DAST & Web Security Scanner Active)**
 >
-> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, and **AWS Security Posture Scanner** evaluating local IAM policies and AWS configurations without cloud network calls or AWS CLI execution.
+> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, **AWS Posture Scanner**, and **DAST Web Security Scanner** evaluating OpenAPI specifications, web server configs, and explicit local HTTP target response headers.
 
 ### Supported Security Modules
 - **Secret Scanner (`sentinelscan secrets`)**: AWS keys, GitHub PATs, JWTs, PEM private keys, DB connection URLs, service API keys, generic high-entropy secrets.
@@ -38,12 +38,15 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 - **Docker Scanner (`sentinelscan docker`)**: Static Dockerfile security analysis evaluating root user usage, base image pinning, embedded secrets, dangerous `ADD` instructions, sensitive ports, and health checks.
 - **Kubernetes Scanner (`sentinelscan k8s`)**: Static manifest analysis evaluating privileged containers, root users, resource limits, host namespaces, privilege escalation, RBAC cluster-admin permissions, and unencrypted secret data.
 - **AWS Posture Scanner (`sentinelscan aws`)**: Static IAM policy and configuration analysis evaluating wildcard actions/resources, `iam:PassRole`, S3 public/unencrypted policies, KMS key policies, local credential masking, and MFA profiles.
+- **DAST Web Scanner (`sentinelscan dast`)**: Web application security analysis evaluating OpenAPI specifications, unauthenticated sensitive endpoints, HTTP security headers (HSTS, CSP, XFO, XCTO), CORS policies, server banner disclosures, and explicit `--target-url` read-only header inspection.
 
 ### 🔒 Security & Privacy Guarantees
 - **Zero Raw Secret Exposure**: Secret values are strictly masked before constructing finding objects.
-- **Zero Code / Container / Cluster / Cloud Execution**: Target code and infrastructure commands are **NEVER** executed. Docker CLI (`docker`), Kubernetes CLI (`kubectl`/`helm`), and AWS CLI (`aws`) binaries are **NEVER** invoked. Live AWS account APIs and Kubernetes API servers are **NEVER** accessed.
+- **100% Offline Default Scans**: Running `sentinelscan scan .` performs 100% offline static analysis. Target code, containers, or cloud CLI commands are **NEVER** executed.
+- **Strict Read-Only Active Header Inspection**: Active HTTP checks run **ONLY** when explicitly requested via `--target-url`. Performs single read-only `HEAD`/`GET` requests with cross-host redirect safeguards. **NEVER** sends mutating requests (`POST`/`PUT`/`DELETE`), attack payloads, fuzzing, or port scans.
 - **Strict Metadata Privacy**: Outbound SCA queries send ONLY package names and version strings (`{"package": {"name": "express", "ecosystem": "npm"}, "version": "4.16.0"}`). Source code, secrets, or file paths are **NEVER** transmitted.
 - **Strict `--offline` Mode**: Passing `--offline` strictly guarantees zero network socket calls.
+
 
 
 
@@ -117,9 +120,19 @@ Run focused AWS security posture scan:
 sentinelscan aws .
 ```
 
+Run focused DAST web application scan (static local mode):
+```bash
+sentinelscan dast .
+```
+
+Run focused DAST web application scan against an explicit local HTTP target URL:
+```bash
+sentinelscan dast --target-url http://localhost:8080
+```
+
 Generate machine-readable JSON output:
 ```bash
-sentinelscan aws . --json
+sentinelscan dast . --json
 ```
 
 ---
@@ -135,9 +148,9 @@ TARGET DISCOVERY
   Path              : /path/to/project
   Target Type       : Directory
   Git Repository    : Yes
-  Total Files       : 42
-  Total Size        : 74200 bytes
-  Detected Tech     : python, javascript, container, kubernetes, cloud
+  Total Files       : 45
+  Total Size        : 78500 bytes
+  Detected Tech     : python, javascript, container, kubernetes, cloud, dast
 
 SCANNER MODULES
   [OK  ] secret-scanner       : SUCCESS (0 findings, 0.002s)
@@ -146,23 +159,24 @@ SCANNER MODULES
   [OK  ] sca-scanner          : SUCCESS (0 findings, 0.012s)
   [OK  ] docker-scanner       : SUCCESS (0 findings, 0.004s)
   [OK  ] k8s-scanner          : SUCCESS (0 findings, 0.005s)
-  [OK  ] aws-scanner          : SUCCESS (1 findings, 0.004s)
+  [OK  ] aws-scanner          : SUCCESS (0 findings, 0.004s)
+  [OK  ] dast-scanner         : SUCCESS (1 findings, 0.003s)
 
 FINDINGS SUMMARY
   Total Findings    : 1
 
 FINDINGS DETAILS
 --------------------------------------------------
-  [1] [CRITICAL] IAM Policy Grants Full Wildcard Action in iam-policy.json
-      Rule ID       : AWS-IAM-WILDCARD-ACTION (aws-scanner)
-      Category      : cloud
+  [1] [HIGH] Sensitive OpenAPI Endpoint Lacks Authentication in openapi.json
+      Rule ID       : DAST-OPENAPI-NO-AUTH (dast-scanner)
+      Category      : dast
       Confidence    : HIGH
-      Location      : /path/to/project/iam-policy.json:L1
-      Description   : IAM policy statement #1 in 'iam-policy.json' grants Effect: Allow with Action: '*'.
-      Impact        : Full wildcard action grants unrestricted administrative access across all AWS service APIs.
-      Remediation   : Restrict Action permissions to specific required API calls (e.g. s3:GetObject).
+      Location      : /path/to/project/openapi.json:L1
+      Description   : OpenAPI endpoint 'POST /admin/deleteUser' in 'openapi.json' lacks security requirements.
+      Impact        : Exposes administrative or sensitive business logic APIs to unauthenticated remote access.
+      Remediation   : Enforce global or endpoint-level security requirements in OpenAPI specification.
 --------------------------------------------------
-EXECUTION COMPLETED in 0.031 seconds.
+EXECUTION COMPLETED in 0.034 seconds.
 ==================================================
 ```
 
@@ -178,7 +192,8 @@ EXECUTION COMPLETED in 0.031 seconds.
 - [x] **v0.6.0 - Docker Security Analysis (Milestone 6)**: Static Dockerfile security analysis evaluating root user, base image pinning, secrets in `ENV`/`ARG`, dangerous `ADD`, sensitive ports, and health checks.
 - [x] **v0.7.0 - Kubernetes Security Analysis (Milestone 7)**: Static Kubernetes manifest analysis evaluating privileged containers, root users, resource limits, host namespaces, allowPrivilegeEscalation, RBAC cluster-admin permissions, and unencrypted secret data.
 - [x] **v0.8.0 - AWS Cloud Posture Assessment (Milestone 8)**: Static AWS IAM policy and configuration analysis evaluating wildcard actions/resources, `iam:PassRole`, S3 public/unencrypted policies, KMS key policies, local credential masking, and MFA profiles.
-- [ ] **v0.9.0 - Risk Correlation & Attack-Path Analysis**: Multi-finding correlation engine, posture scoring, and remediation reports.
+- [x] **v0.9.0 - Dynamic Testing & Web Security (Milestone 9)**: Web application security analysis evaluating OpenAPI specifications, unauthenticated sensitive endpoints, HTTP security headers (HSTS, CSP, XFO, XCTO), CORS policies, server banner disclosures, and explicit `--target-url` read-only header inspection.
+- [ ] **v1.0.0 - Network Security Assessment**: Authorized local port and service banner assessment module.
 
 ---
 
@@ -192,7 +207,8 @@ Comprehensive engineering documentation is maintained in the [`docs/`](docs/) di
 - **[TESTING.md](docs/TESTING.md)**: Quality assurance guide, pytest suite structure, and secret leak verification.
 - **[SCANNER_DEVELOPMENT.md](docs/SCANNER_DEVELOPMENT.md)**: Definitive 13-step guide for building new scanner modules.
 - **[ROADMAP.md](docs/ROADMAP.md)**: Official feature matrix and capability status breakdown.
-- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md)).
+- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md), [`09-dast.md`](docs/milestones/09-dast.md)).
+
 
 
 

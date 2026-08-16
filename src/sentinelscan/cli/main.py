@@ -6,6 +6,7 @@ from collections.abc import Sequence
 
 from sentinelscan.cli.commands import (
     handle_aws,
+    handle_dast,
     handle_docker,
     handle_iac,
     handle_k8s,
@@ -215,6 +216,35 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'dast' command
+    dast_parser = subparsers.add_parser(
+        "dast",
+        help="Run focused Web Application and DAST security scanning against OpenAPI specs or web configs.",
+    )
+    dast_parser.add_argument(
+        "target",
+        nargs="?",
+        default=".",
+        metavar="PATH",
+        help="Target directory or file path to assess (defaults to '.').",
+    )
+    dast_parser.add_argument(
+        "--target-url",
+        metavar="URL",
+        help="Explicit HTTP/HTTPS target URL for active read-only response header inspection.",
+    )
+    dast_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    dast_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -294,6 +324,16 @@ def main(args: Sequence[str] | None = None) -> None:
         sys.exit(
             handle_aws(
                 target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "dast":
+        sys.exit(
+            handle_dast(
+                target_path_str=parsed.target,
+                target_url=parsed.target_url,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
             )

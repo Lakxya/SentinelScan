@@ -15,6 +15,7 @@ class ScannerRegistry:
     def _register_defaults(self) -> None:
         """Instantiate and register standard SentinelScan security scanners."""
         from sentinelscan.scanners.aws_scanner import AwsScanner
+        from sentinelscan.scanners.dast_scanner import DastScanner
         from sentinelscan.scanners.docker_scanner import DockerScanner
         from sentinelscan.scanners.iac_scanner import IacScanner
         from sentinelscan.scanners.k8s_scanner import KubernetesScanner
@@ -29,6 +30,8 @@ class ScannerRegistry:
         self.register(DockerScanner())
         self.register(KubernetesScanner())
         self.register(AwsScanner())
+        self.register(DastScanner())
+
 
 
 

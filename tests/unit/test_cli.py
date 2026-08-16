@@ -2,6 +2,7 @@
 
 from sentinelscan.cli.commands import (
     handle_aws,
+    handle_dast,
     handle_docker,
     handle_iac,
     handle_k8s,
@@ -133,3 +134,16 @@ def test_cli_aws_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "aws-scanner" in captured.out
+
+
+def test_cli_dast_command(capsys):
+    """Verify dedicated dast command executes DAST scanner workflow with static path and --target-url."""
+    parser = create_parser()
+    args = parser.parse_args(["dast", ".", "--target-url", "http://localhost:8080"])
+    assert args.command == "dast"
+    assert args.target_url == "http://localhost:8080"
+
+    exit_code = handle_dast(".", target_url=None, json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "dast-scanner" in captured.out

@@ -2,6 +2,7 @@
 
 from sentinelscan.cli.commands import (
     handle_aws,
+    handle_dast,
     handle_docker,
     handle_iac,
     handle_k8s,
@@ -16,6 +17,7 @@ from sentinelscan.cli.main import create_parser, main
 __all__ = [
     "create_parser",
     "handle_aws",
+    "handle_dast",
     "handle_docker",
     "handle_iac",
     "handle_k8s",

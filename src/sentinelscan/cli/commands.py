@@ -9,6 +9,7 @@ from sentinelscan.core.exceptions import InvalidTargetError, TargetNotFoundError
 from sentinelscan.reporting.console import ConsoleReporter
 from sentinelscan.reporting.json import JsonReporter
 from sentinelscan.scanners.aws_scanner import AwsScanner
+from sentinelscan.scanners.dast_scanner import DastScanner
 from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.k8s_scanner import KubernetesScanner
@@ -178,4 +179,21 @@ def handle_aws(
         json_output=json_output,
         verbose=verbose,
         registry=aws_registry,
+    )
+
+
+def handle_dast(
+    target_path_str: str = ".",
+    target_url: str | None = None,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated DAST and web security scanning workflow against target path or active URL."""
+    dast_registry = ScannerRegistry(register_defaults=False)
+    dast_registry.register(DastScanner(target_url=target_url))
+    return handle_scan(
+        target_path_str=target_path_str,
+        json_output=json_output,
+        verbose=verbose,
+        registry=dast_registry,
     )
