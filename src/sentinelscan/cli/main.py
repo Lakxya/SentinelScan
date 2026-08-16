@@ -11,6 +11,7 @@ from sentinelscan.cli.commands import (
     handle_graph,
     handle_iac,
     handle_k8s,
+    handle_network,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -270,6 +271,33 @@ def create_parser() -> argparse.ArgumentParser:
         help="Enable detailed debug log messages.",
     )
 
+    # 'network' command
+    network_parser = subparsers.add_parser(
+        "network",
+        help="Run authorized Network Security Assessment scanning against an explicit target host.",
+    )
+    network_parser.add_argument(
+        "target_host",
+        metavar="HOST",
+        help="Explicit target host IP or hostname (e.g. '127.0.0.1' or 'localhost').",
+    )
+    network_parser.add_argument(
+        "--ports",
+        metavar="PORTS",
+        help="Comma-separated list of TCP ports to inspect (e.g. '22,80,443,3306').",
+    )
+    network_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Render report output in structured JSON format.",
+    )
+    network_parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Enable detailed debug log messages.",
+    )
+
     return parser
 
 
@@ -368,6 +396,23 @@ def main(args: Sequence[str] | None = None) -> None:
         sys.exit(
             handle_graph(
                 target_path_str=parsed.target,
+                json_output=parsed.json_output,
+                verbose=parsed.verbose,
+            )
+        )
+
+    if parsed.command == "network":
+        ports_list = None
+        if parsed.ports:
+            try:
+                ports_list = [int(p.strip()) for p in parsed.ports.split(",") if p.strip().isdigit()]
+            except Exception:  # noqa: BLE001
+                ports_list = None
+
+        sys.exit(
+            handle_network(
+                target_host=parsed.target_host,
+                ports_list=ports_list,
                 json_output=parsed.json_output,
                 verbose=parsed.verbose,
             )

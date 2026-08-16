@@ -7,6 +7,7 @@ from sentinelscan.cli.commands import (
     handle_graph,
     handle_iac,
     handle_k8s,
+    handle_network,
     handle_sast,
     handle_sca,
     handle_scan,
@@ -160,3 +161,17 @@ def test_cli_graph_command(capsys):
     assert exit_code == 0
     captured = capsys.readouterr()
     assert "SentinelScan Architecture Graph" in captured.out
+
+
+def test_cli_network_command(capsys):
+    """Verify dedicated network command executes Network scanner workflow."""
+    parser = create_parser()
+    args = parser.parse_args(["network", "127.0.0.1", "--ports", "22,80,443"])
+    assert args.command == "network"
+    assert args.target_host == "127.0.0.1"
+    assert args.ports == "22,80,443"
+
+    exit_code = handle_network("127.0.0.1", ports_list=[22, 80, 443], json_output=False, verbose=False)
+    assert exit_code == 0
+    captured = capsys.readouterr()
+    assert "network-scanner" in captured.out

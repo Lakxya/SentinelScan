@@ -20,6 +20,7 @@ class NodeType(str, Enum):
     K8S_SECRET = "k8s_secret"
     K8S_SERVICE_ACCOUNT = "k8s_service_account"
     DOCKER_IMAGE = "docker_image"
+    NETWORK_SERVICE = "network_service"
     SECURITY_FINDING = "security_finding"
     FILE_TARGET = "file_target"
 
@@ -33,6 +34,7 @@ class EdgeType(str, Enum):
     USES_CONFIGMAP = "USES_CONFIGMAP"
     USES_SERVICE_ACCOUNT = "USES_SERVICE_ACCOUNT"
     EXPOSES = "EXPOSES"
+    EXPOSES_SERVICE = "EXPOSES_SERVICE"
     BUILDS_FROM = "BUILDS_FROM"
     HAS_FINDING = "HAS_FINDING"
 

@@ -17,7 +17,7 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 7. **AWS Cloud Posture Assessment** *(Implemented in v0.8.0)*
 8. **Dynamic Testing & Web Security (DAST)** *(Implemented in v0.9.0)*
 9. **Architecture Graph Capability** *(Implemented in v1.0.0)*
-10. Network Security Assessment
+10. **Network Security Assessment** *(Implemented in v1.1.0)*
 11. Attack-Path & Risk Correlation
 12. Posture Scoring & Remediation Guidance
 
@@ -26,9 +26,9 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 ## 📌 Current Status & Features
 
 > [!NOTE]
-> **Current Version: `v1.0.0` (Milestone 10: Architecture Graph Active)**
+> **Current Version: `v1.1.0` (Milestone 11: Network Security Assessment Active)**
 >
-> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, **AWS Posture Scanner**, **DAST Web Security Scanner**, and **Architecture Graph Capability** mapping relationships between Terraform, Kubernetes, AWS IAM, Docker assets, and security findings.
+> SentinelScan includes a production-oriented **Secret Scanner**, **Python SAST Scanner**, **IaC Security Scanner**, **SCA Dependency Scanner**, **Docker Security Scanner**, **Kubernetes Security Scanner**, **AWS Posture Scanner**, **DAST Web Security Scanner**, **Architecture Graph Capability**, and **Network Security Assessment Scanner** (`NetworkScanner`).
 
 ### Supported Security Modules & Capabilities
 - **Secret Scanner (`sentinelscan secrets`)**: AWS keys, GitHub PATs, JWTs, PEM private keys, DB connection URLs, service API keys, generic high-entropy secrets.
@@ -40,12 +40,16 @@ SentinelScan provides security engineers, developers, and DevOps teams with a si
 - **AWS Posture Scanner (`sentinelscan aws`)**: Static IAM policy and configuration analysis evaluating wildcard actions/resources, `iam:PassRole`, S3 public/unencrypted policies, KMS key policies, local credential masking, and MFA profiles.
 - **DAST Web Scanner (`sentinelscan dast`)**: Web application security analysis evaluating OpenAPI specifications, unauthenticated sensitive endpoints, HTTP security headers (HSTS, CSP, XFO, XCTO), CORS policies, server banner disclosures, and explicit `--target-url` read-only header inspection.
 - **Architecture Graph (`sentinelscan graph`)**: Local read-only resource discovery and relationship graph mapping Terraform dependencies, Kubernetes workloads to Secrets/ConfigMaps/ServiceAccounts, AWS IAM policies to S3 buckets, Docker base images, and scanner security findings.
+- **Network Scanner (`sentinelscan network`)**: Authorized read-only TCP connect scanning, passive banner reading, stdlib TLS handshake version verification, and single IP target resolution against explicit user-requested target hosts.
 
 ### 🔒 Security & Privacy Guarantees
 - **Terminal CLI Exclusivity**: SentinelScan is strictly a terminal CLI tool. Zero web interfaces, dashboards, or web servers.
 - **Zero Raw Secret Exposure**: Secret values are strictly masked using `mask_token()` before constructing finding objects or graph metadata.
-- **100% Offline Default Scans**: Running `sentinelscan scan .` or `sentinelscan graph .` performs 100% offline static analysis. Target code, containers, or cloud CLI commands are **NEVER** executed.
-- **Strict Read-Only Active Header Inspection**: Active HTTP checks run **ONLY** when explicitly requested via `sentinelscan dast --target-url`. Performs single read-only `HEAD`/`GET` requests with cross-host redirect safeguards. **NEVER** sends mutating requests (`POST`/`PUT`/`DELETE`), attack payloads, fuzzing, or port scans.
+- **100% Offline Default Scans**: Running `sentinelscan scan .` or `sentinelscan graph .` performs 100% offline static analysis. Target code, containers, cloud CLI commands, or network sockets are **NEVER** executed.
+- **Authorized Active Assessment**: Active network checks run **ONLY** when explicitly requested via `sentinelscan network <target-host>`. Performs single read-only stdlib TCP connect checks (`socket.create_connection`) with bounded timeouts (0.5s per port).
+- **Zero Subprocess Execution**: Uses stdlib `socket` and `ssl`. Never runs `nmap`, `masscan`, `nc`, or `netcat`.
+- **Zero Exploitation, Fuzzing, or Brute Force**: Never sends attack payloads, vulnerability exploits, raw SYN packet injections, or credential brute-forcing.
+
 - **Strict Metadata Privacy**: Outbound SCA queries send ONLY package names and version strings (`{"package": {"name": "express", "ecosystem": "npm"}, "version": "4.16.0"}`). Source code, secrets, or file paths are **NEVER** transmitted.
 - **Strict `--offline` Mode**: Passing `--offline` strictly guarantees zero network socket calls.
 
@@ -143,32 +147,53 @@ Generate machine-readable architecture graph JSON output:
 sentinelscan graph . --json
 ```
 
+Run authorized Network Security Assessment against an explicit target host:
+```bash
+sentinelscan network 127.0.0.1
+```
+
+Run network assessment against explicit target host with custom ports:
+```bash
+sentinelscan network 127.0.0.1 --ports 22,80,443,3306
+```
+
+Generate machine-readable network assessment JSON output:
+```bash
+sentinelscan network 127.0.0.1 --json
+```
+
 ---
 
 ## 📋 Example Console Output
 
 ```text
 ==================================================
-        SentinelScan Architecture Graph           
+        SentinelScan Security Assessment          
 ==================================================
 
 TARGET DISCOVERY
-  Path              : /path/to/project
-  Total Nodes       : 6
-  Total Edges       : 5
+  Host              : 127.0.0.1
+  Target Type       : Network Host
+  Ports Scanned     : 25
 
-ARCHITECTURE GRAPH TREES
---------------------------------------------------
-[k8s:Deployment:default/web-deploy] (Deployment/web-deploy)
-  ├── [USES_SECRET] ---> [k8s:Secret:default/db-secret]
-  │     └── [HAS_FINDING] ---> [Finding: K8S-PLAIN-TEXT-SECRET-DATA] (MEDIUM)
-  └── [USES_SERVICE_ACCOUNT] ---> [k8s:ServiceAccount:default/web-sa]
+SCANNER MODULES
+  [OK  ] network-scanner     : SUCCESS (1 findings, 0.125s)
 
-[tf:aws_iam_role.app_role] (aws_iam_role/app_role)
-  └── [ATTACHED_TO] ---> [tf:aws_iam_policy.app_policy]
-        └── [HAS_FINDING] ---> [Finding: AWS-IAM-WILDCARD-ACTION] (CRITICAL)
+FINDINGS SUMMARY
+  Total Findings    : 1
+
+FINDINGS DETAILS
 --------------------------------------------------
-EXECUTION COMPLETED in 0.015 seconds.
+  [1] [HIGH] Exposed Database Service Port (MySQL) in 127.0.0.1:3306
+      Rule ID       : NET-EXPOSED-DATABASE (network-scanner)
+      Category      : network
+      Confidence    : HIGH
+      Location      : 127.0.0.1:3306
+      Description   : Exposed MySQL database port 3306 open on '127.0.0.1:3306'.
+      Impact        : Exposes database management ports to remote network reconnaissance.
+      Remediation   : Bind database listener to 127.0.0.1 or enforce firewall rules.
+--------------------------------------------------
+EXECUTION COMPLETED in 0.128 seconds.
 ==================================================
 ```
 
@@ -186,7 +211,8 @@ EXECUTION COMPLETED in 0.015 seconds.
 - [x] **v0.8.0 - AWS Cloud Posture Assessment (Milestone 8)**: Static AWS IAM policy and configuration analysis evaluating wildcard actions/resources, `iam:PassRole`, S3 public/unencrypted policies, KMS key policies, local credential masking, and MFA profiles.
 - [x] **v0.9.0 - Dynamic Testing & Web Security (Milestone 9)**: Web application security analysis evaluating OpenAPI specifications, unauthenticated sensitive endpoints, HTTP security headers (HSTS, CSP, XFO, XCTO), CORS policies, server banner disclosures, and explicit `--target-url` read-only header inspection.
 - [x] **v1.0.0 - Architecture Graph Capability (Milestone 10)**: Local read-only architecture graph discovery mapping Terraform, Kubernetes, AWS IAM, Docker relationships, scanner finding association, terminal ASCII tree, and JSON serialization.
-- [ ] **v1.1.0 - Network Security Assessment**: Authorized local port and service banner assessment module.
+- [x] **v1.1.0 - Network Security Assessment (Milestone 11)**: Authorized read-only TCP connect scanner module (`NetworkScanner`), `NetworkTargetValidator` single IP resolution, `TcpConnectScanner` stdlib TLS handshake version inspector, 8 refined security rules, 100% offline default scan guarantee, zero subprocess execution, and `sentinelscan network` subcommand.
+- [ ] **v1.2.0 - Attack-Path & Risk Correlation**: Cross-domain attack path correlation engine linking vulnerabilities to assets.
 
 ---
 
@@ -200,7 +226,8 @@ Comprehensive engineering documentation is maintained in the [`docs/`](docs/) di
 - **[TESTING.md](docs/TESTING.md)**: Quality assurance guide, pytest suite structure, and secret leak verification.
 - **[SCANNER_DEVELOPMENT.md](docs/SCANNER_DEVELOPMENT.md)**: Definitive 13-step guide for building new scanner modules.
 - **[ROADMAP.md](docs/ROADMAP.md)**: Official feature matrix and capability status breakdown.
-- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md), [`09-dast.md`](docs/milestones/09-dast.md), [`10-architecture-graph.md`](docs/milestones/10-architecture-graph.md)).
+- **[Milestones](docs/milestones/)**: Historical milestone release records ([`01-foundation.md`](docs/milestones/01-foundation.md), [`02-secret-scanner.md`](docs/milestones/02-secret-scanner.md), [`03-sast.md`](docs/milestones/03-sast.md), [`04-iac.md`](docs/milestones/04-iac.md), [`05-sca.md`](docs/milestones/05-sca.md), [`06-docker.md`](docs/milestones/06-docker.md), [`07-k8s.md`](docs/milestones/07-k8s.md), [`08-aws.md`](docs/milestones/08-aws.md), [`09-dast.md`](docs/milestones/09-dast.md), [`10-architecture-graph.md`](docs/milestones/10-architecture-graph.md), [`11-network-security.md`](docs/milestones/11-network-security.md)).
+
 
 
 

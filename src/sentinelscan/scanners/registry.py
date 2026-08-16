@@ -19,6 +19,7 @@ class ScannerRegistry:
         from sentinelscan.scanners.docker_scanner import DockerScanner
         from sentinelscan.scanners.iac_scanner import IacScanner
         from sentinelscan.scanners.k8s_scanner import KubernetesScanner
+        from sentinelscan.scanners.network_scanner import NetworkScanner
         from sentinelscan.scanners.sast_scanner import SastScanner
         from sentinelscan.scanners.sca_scanner import ScaScanner
         from sentinelscan.scanners.secret_scanner import SecretScanner
@@ -31,6 +32,8 @@ class ScannerRegistry:
         self.register(KubernetesScanner())
         self.register(AwsScanner())
         self.register(DastScanner())
+        self.register(NetworkScanner())
+
 
 
 

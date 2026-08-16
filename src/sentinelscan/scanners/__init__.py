@@ -6,6 +6,7 @@ from sentinelscan.scanners.dast_scanner import DastScanner
 from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.k8s_scanner import KubernetesScanner
+from sentinelscan.scanners.network_scanner import NetworkScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
 from sentinelscan.scanners.sca_scanner import ScaScanner
@@ -18,6 +19,7 @@ __all__ = [
     "DockerScanner",
     "IacScanner",
     "KubernetesScanner",
+    "NetworkScanner",
     "SastScanner",
     "ScaScanner",
     "ScannerRegistry",

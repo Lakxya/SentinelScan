@@ -15,6 +15,7 @@ from sentinelscan.scanners.dast_scanner import DastScanner
 from sentinelscan.scanners.docker_scanner import DockerScanner
 from sentinelscan.scanners.iac_scanner import IacScanner
 from sentinelscan.scanners.k8s_scanner import KubernetesScanner
+from sentinelscan.scanners.network_scanner import NetworkScanner
 from sentinelscan.scanners.registry import ScannerRegistry
 from sentinelscan.scanners.sast_scanner import SastScanner
 from sentinelscan.scanners.sca_scanner import ScaScanner
@@ -236,3 +237,20 @@ def handle_graph(
         return 2
 
     return 0
+
+
+def handle_network(
+    target_host: str,
+    ports_list: list[int] | None = None,
+    json_output: bool = False,
+    verbose: bool = False,
+) -> int:
+    """Execute dedicated Network Security Assessment scanning workflow against target host."""
+    net_registry = ScannerRegistry(register_defaults=False)
+    net_registry.register(NetworkScanner(target_host=target_host, ports=ports_list))
+    return handle_scan(
+        target_path_str=".",
+        json_output=json_output,
+        verbose=verbose,
+        registry=net_registry,
+    )
