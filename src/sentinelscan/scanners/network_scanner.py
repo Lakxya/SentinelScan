@@ -105,13 +105,14 @@ class TcpConnectScanner:
                 with ctx.wrap_socket(sock, server_hostname=target_host) as ssl_sock:
                     has_tls = True
                     tls_version = ssl_sock.version()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                logger.debug("TLS handshake failed for %s:%d: %s", target_host, port, e)
         else:
             try:
                 sock.close()
-            except Exception:  # noqa: BLE001
-                pass
+            except Exception as e:  # noqa: BLE001
+                logger.debug("Socket close error for %s:%d: %s", target_host, port, e)
+
 
         return NetworkService(
             host=target_host,

@@ -28,7 +28,8 @@ def test_cli_version_flag(capsys):
     exit_code = handle_version()
     assert exit_code == 0
     captured = capsys.readouterr()
-    assert "SentinelScan v0.1.0" in captured.out
+    assert "SentinelScan v1.3.0" in captured.out
+
 
 
 def test_cli_scan_invalid_path(capsys):

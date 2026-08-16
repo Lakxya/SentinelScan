@@ -4,8 +4,9 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sentinelscan"
-version = "0.1.0"
+version = "1.3.0"
 description = "Local-first DevSecOps and cloud security assessment CLI"
+
 readme = "README.md"
 authors = [
     { name = "SentinelScan Contributors" }
